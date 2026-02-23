@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  packages: write
 
 jobs:
   release:
@@ -34,6 +35,12 @@ jobs:
 
       - name: Package chart
         run: helm package charts/agent
+
+      - name: Login to GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Push chart to OCI (ghcr.io)
+        run: helm push agent-*.tgz oci://ghcr.io/${{ github.repository }}
 
       - name: Create Release and upload chart
         uses: softprops/action-gh-release@v2

@@ -16,10 +16,26 @@ Helm charts for [Kaja](https://kaja.dev) — deploy the Kaja agent and CRDs to c
 
 ## Quick start
 
-Install from a [release](https://github.com/abdheshnayak/kaja-helm/releases). Use the release tag in the URL (e.g. `v0.0.1`); the chart file is `agent-<version>.tgz` with version without the `v` (e.g. `agent-0.0.1.tgz`).
+Install or upgrade from the [GitHub Container Registry](https://github.com/abdheshnayak/kaja-helm/pkgs/container/helm%2Fkaja-helm%2Fagent) (OCI, recommended) or from a [release](https://github.com/abdheshnayak/kaja-helm/releases) tarball. Use `helm upgrade --install` so the same command is idempotent (installs if missing, upgrades if already installed).
+
+**OCI (ghcr.io):**
 
 ```bash
-helm install kaja-agent https://github.com/abdheshnayak/kaja-helm/releases/download/v0.0.1/agent-0.0.1.tgz \
+helm upgrade --install kaja-agent oci://ghcr.io/abdheshnayak/kaja-helm/agent \
+  --version 0.0.1 \
+  --namespace kaja \
+  --create-namespace \
+  --set env.clusterId=mycluster \
+  --set env.agentToken="YOUR_AGENT_TOKEN" \
+  --set env.portServerUrl="https://your-port-server"
+```
+
+Replace `0.0.1` with the [release](https://github.com/abdheshnayak/kaja-helm/releases) version you want.
+
+**Release tarball:**
+
+```bash
+helm upgrade --install kaja-agent https://github.com/abdheshnayak/kaja-helm/releases/download/v0.0.1/agent-0.0.1.tgz \
   --namespace kaja \
   --create-namespace \
   --set env.clusterId=mycluster \
@@ -34,14 +50,14 @@ Replace `v0.0.1` and `agent-0.0.1.tgz` with the [release](https://github.com/abd
 For development or custom changes:
 
 ```bash
-# Install the Kaja agent (no webhooks)
-helm install kaja-agent ./charts/agent --namespace kaja --create-namespace
+# Install or upgrade the Kaja agent (no webhooks)
+helm upgrade --install kaja-agent ./charts/agent --namespace kaja --create-namespace
 ```
 
 Configure the agent (required for console connectivity):
 
 ```bash
-helm install kaja-agent ./charts/agent \
+helm upgrade --install kaja-agent ./charts/agent \
   --namespace kaja \
   --create-namespace \
   --set env.clusterId=mycluster \
@@ -56,8 +72,8 @@ For production, enable webhooks (requires [cert-manager](https://cert-manager.io
 kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.13.3/cert-manager.yaml
 kubectl wait --for=condition=available --timeout=300s deployment/cert-manager -n cert-manager
 
-# 2. Install Kaja agent with webhooks
-helm install kaja-agent ./charts/agent \
+# 2. Install or upgrade Kaja agent with webhooks
+helm upgrade --install kaja-agent ./charts/agent \
   --namespace kaja \
   --create-namespace \
   --set webhook.enabled=true \
@@ -90,11 +106,7 @@ See [charts/agent/values.yaml](charts/agent/values.yaml) for all options.
 
 ## Upgrade and uninstall
 
-**Upgrade** to a newer release (use the new version’s tarball URL):
-
-```bash
-helm upgrade kaja-agent https://github.com/abdheshnayak/kaja-helm/releases/download/v0.0.2/agent-0.0.2.tgz --namespace kaja
-```
+Re-run the same `helm upgrade --install` command with a new `--version` (or new tarball URL) to upgrade. No separate upgrade flow.
 
 **Uninstall:**
 
@@ -115,4 +127,4 @@ Releases are built by GitHub Actions when you push a version tag.
    git push origin v0.0.1
    ```
 
-2. The workflow will set the chart version from the tag, lint and package the chart, then create a [GitHub Release](https://github.com/abdheshnayak/kaja-helm/releases) with `agent-<version>.tgz` attached.
+2. The workflow will set the chart version from the tag, lint and package the chart, push it to the [GitHub Container Registry](https://ghcr.io/abdheshnayak/kaja-helm/agent) (OCI), and create a [GitHub Release](https://github.com/abdheshnayak/kaja-helm/releases) with `agent-<version>.tgz` attached.
