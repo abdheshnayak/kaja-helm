@@ -11,6 +11,8 @@
 
 ## Installation
 
+CRDs are in the chart's `crds/` directory (Helm standard). They are installed on first install and skipped if they already exist, so a single `helm install` or `helm upgrade --install` works without extra steps.
+
 ### Quick Start (No Webhooks)
 ```bash
 helm install kaja-agent ./agent --namespace kaja --create-namespace
@@ -66,6 +68,8 @@ webhook:
 ```bash
 helm upgrade kaja-agent ./agent --namespace kaja
 ```
+
+Note: CRDs in `crds/` are not upgraded by Helm (per [Helm CRD best practices](https://helm.sh/docs/chart_best_practices/custom_resource_definitions/)). If a chart version includes CRD changes, apply them manually with `kubectl apply -f crds/` or reinstall in a new cluster.
 
 ## Uninstalling
 
