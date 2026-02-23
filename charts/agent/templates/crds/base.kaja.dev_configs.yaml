@@ -1,0 +1,158 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.18.0
+  name: configs.base.kaja.dev
+spec:
+  group: base.kaja.dev
+  names:
+    kind: Config
+    listKind: ConfigList
+    plural: configs
+    singular: config
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .status.statusEmoji
+      name: Status
+      type: string
+    - jsonPath: .status.checksCompleted
+      name: Checks
+      type: string
+    - jsonPath: .spec.type
+      name: Type
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1
+    schema:
+      openAPIV3Schema:
+        description: Config is the Schema for the configs API
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: spec defines the desired state of Config
+            properties:
+              annotations:
+                additionalProperties:
+                  type: string
+                description: Annotations for additional metadata
+                type: object
+              clusterRef:
+                description: ClusterRef references the cluster where this resource
+                  is deployed
+                type: string
+              data:
+                additionalProperties:
+                  type: string
+                description: Data contains the configuration key-value pairs
+                type: object
+              description:
+                description: Description provides additional context about the resource
+                type: string
+              displayName:
+                description: DisplayName is a human-readable name for the resource
+                type: string
+              environmentRef:
+                description: EnvironmentRef references the environment this resource
+                  belongs to
+                type: string
+              immutable:
+                description: Immutable indicates whether the config can be modified
+                type: boolean
+              labels:
+                additionalProperties:
+                  type: string
+                description: Labels for additional metadata
+                type: object
+              type:
+                description: Type specifies the type of configuration (env, configmap,
+                  secret, etc.)
+                type: string
+            required:
+            - data
+            type: object
+          status:
+            description: status defines the observed state of Config
+            properties:
+              checksCompleted:
+                type: string
+              message:
+                type: string
+              pods:
+                description: Pods holds basic pod details for display (e.g. ContainerApp
+                  overview). Optional.
+                items:
+                  description: |-
+                    PodInfo holds basic pod details for display (e.g. on ContainerApp/HelmApp overview).
+                    Used when a resource has associated pods (e.g. ContainerApp's deployment, Helm release pods).
+                    Reason and Message surface container waiting/terminated state for debugging (e.g. ImagePullBackOff).
+                  properties:
+                    message:
+                      type: string
+                    name:
+                      type: string
+                    phase:
+                      type: string
+                    ready:
+                      type: string
+                    reason:
+                      type: string
+                    restartCount:
+                      format: int32
+                      type: integer
+                  required:
+                  - name
+                  - phase
+                  - ready
+                  - restartCount
+                  type: object
+                type: array
+              status:
+                type: string
+              statusEmoji:
+                type: string
+              steps:
+                items:
+                  properties:
+                    message:
+                      type: string
+                    name:
+                      type: string
+                    status:
+                      type: string
+                  required:
+                  - message
+                  - name
+                  - status
+                  type: object
+                type: array
+            required:
+            - status
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

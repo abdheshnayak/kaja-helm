@@ -1,0 +1,52 @@
+{{- if .Values.rbac.create -}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "agent.fullname" . }}-role
+  labels:
+    {{- include "agent.labels" . | nindent 4 }}
+rules:
+- apiGroups: ["*"]
+  resources: ["*"]
+  verbs: ["*"]
+- nonResourceURLs: ["*"]
+  verbs: ["*"]
+
+# rules:
+# - apiGroups:
+#   - base.kaja.dev
+#   resources:
+#   - configs
+#   - domains
+#   - environments
+#   - secrets
+#   verbs:
+#   - get
+#   - list
+#   - watch
+# - apiGroups:
+#   - runtime.kaja.dev
+#   resources:
+#   - containerapps
+#   - helmapps
+#   - routes
+#   verbs:
+#   - get
+#   - list
+#   - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "agent.fullname" . }}-rolebinding
+  labels:
+    {{- include "agent.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "agent.fullname" . }}-role
+subjects:
+- kind: ServiceAccount
+  name: {{ include "agent.serviceAccountName" . }}
+  namespace: {{ .Release.Namespace }}
+{{- end }}
