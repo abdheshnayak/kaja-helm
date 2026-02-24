@@ -70,13 +70,17 @@ spec:
             {{- end }}
           env:
             - name: CLUSTER_ID
-              value: {{ .Values.env.clusterId | quote }}
+              value: {{ required "env.clusterId is required when installing the agent chart" .Values.env.clusterId | quote }}
             - name: AGENT_TOKEN
-              value: {{ .Values.env.agentToken | quote }}
+              value: {{ required "env.agentToken is required when installing the agent chart" .Values.env.agentToken | quote }}
+            {{- if .Values.env.portServerUrl }}
             - name: PORT_SERVER_URL
               value: {{ .Values.env.portServerUrl | quote }}
+            {{- end }}
+            {{- if .Values.env.logLevel }}
             - name: LOG_LEVEL
               value: {{ .Values.env.logLevel | quote }}
+            {{- end }}
           livenessProbe:
             exec:
               command:
