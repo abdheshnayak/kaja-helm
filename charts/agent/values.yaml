@@ -67,8 +67,10 @@ env:
   clusterId: "mycluster"
   # Agent authentication token (required)
   agentToken: ""
-  # Port server URL for gRPC communication
-  portServerUrl: ""
+  # gRPC server URL (default: TLS via platform gRPC ingress)
+  portServerUrl: "grpc.server.kaja.dev:443"
+  # Use TLS for gRPC (default true; set false for local dev / NodePort)
+  grpcUseTls: true
   # Logging level
   logLevel: "info"
 

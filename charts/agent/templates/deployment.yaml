@@ -77,6 +77,10 @@ spec:
             - name: PORT_SERVER_URL
               value: {{ .Values.env.portServerUrl | quote }}
             {{- end }}
+            {{- if .Values.env.grpcUseTls }}
+            - name: GRPC_USE_TLS
+              value: "true"
+            {{- end }}
             {{- if .Values.env.logLevel }}
             - name: LOG_LEVEL
               value: {{ .Values.env.logLevel | quote }}
