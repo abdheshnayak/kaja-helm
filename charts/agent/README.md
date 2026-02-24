@@ -21,10 +21,13 @@ helm install kaja-agent ./agent --namespace kaja --create-namespace
 ### With Webhooks (Recommended for Production)
 
 1. **Install cert-manager** (one-time per cluster):
-   ```bash
-   kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.13.3/cert-manager.yaml
-   kubectl wait --for=condition=available --timeout=300s deployment/cert-manager -n cert-manager
-   ```
+```bash
+kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.13.3/cert-manager.yaml
+
+# Wait for cert-manager to be ready
+kubectl wait --for=condition=available --timeout=300s \
+  deployment/cert-manager -n cert-manager
+```
 
 2. **Install Kaja Agent**:
 ```bash
