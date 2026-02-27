@@ -9,7 +9,7 @@
 replicaCount: 1
 
 image:
-  repository: ghcr.io/abdheshnayak/agent
+  repository: ghcr.io/abdheshnayak/kaja-agent
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""
@@ -49,11 +49,11 @@ service:
 # Environment variables for the agent
 env:
   # Cluster identification — set a unique name for each cluster
-  clusterId: "my-cluster"
+  clusterId: ""
   # Agent authentication token — Required, obtain from the Kaja console
   agentToken: ""
   # gRPC server URL of the Kaja platform
-  portServerUrl: "grpc.your-domain.com:443"
+  portServerUrl: "grpc.server.kaja.dev:443"
   # Use TLS for gRPC (recommended for production; set false for local dev / NodePort)
   grpcUseTls: true
   logLevel: "info"
