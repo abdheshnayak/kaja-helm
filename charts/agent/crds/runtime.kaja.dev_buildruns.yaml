@@ -1,0 +1,181 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.18.0
+  name: buildruns.runtime.kaja.dev
+spec:
+  group: runtime.kaja.dev
+  names:
+    kind: BuildRun
+    listKind: BuildRunList
+    plural: buildruns
+    singular: buildrun
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .status.phase
+      name: Phase
+      type: string
+    - jsonPath: .spec.buildMode
+      name: Mode
+      type: string
+    - jsonPath: .spec.buildConfigRef
+      name: BuildConfig
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1
+    schema:
+      openAPIV3Schema:
+        description: BuildRun is the Schema for the buildruns API
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: spec defines the desired state of BuildRun
+            properties:
+              autoRollout:
+                description: AutoRollout is the snapshot of the rollout config
+                properties:
+                  containerAppRef:
+                    type: string
+                  environmentRef:
+                    type: string
+                required:
+                - containerAppRef
+                - environmentRef
+                type: object
+              buildConfigRef:
+                description: BuildConfigRef is the name of the parent BuildConfig
+                type: string
+              buildMode:
+                description: BuildMode specifies what engine to use (resolved at trigger
+                  time)
+                type: string
+              buildParams:
+                description: BuildParams is the snapshot of build parameters
+                properties:
+                  buildArgs:
+                    additionalProperties:
+                      type: string
+                    type: object
+                  cacheEnabled:
+                    type: boolean
+                  dockerfilePath:
+                    type: string
+                  targetStage:
+                    type: string
+                type: object
+              clusterRef:
+                description: ClusterRef references the cluster where this resource
+                  is deployed
+                type: string
+              description:
+                description: Description provides additional context about the resource
+                type: string
+              destinationImage:
+                description: DestinationImage is the resolved full image tag to push
+                  (e.g. registry/repo:main-1234abc)
+                type: string
+              displayName:
+                description: DisplayName is a human-readable name for the resource
+                type: string
+              dockerCreds:
+                description: DockerCreds is the snapshot of the credentials used for
+                  this run
+                properties:
+                  password:
+                    type: string
+                  registry:
+                    type: string
+                  secretRef:
+                    type: string
+                  username:
+                    type: string
+                required:
+                - registry
+                type: object
+              environmentRef:
+                description: EnvironmentRef references the environment this resource
+                  belongs to
+                type: string
+              gitSource:
+                description: GitSource is the snapshot of the git config used for
+                  this run
+                properties:
+                  authType:
+                    type: string
+                  branch:
+                    type: string
+                  credentialRef:
+                    type: string
+                  repoURL:
+                    type: string
+                  subPath:
+                    type: string
+                required:
+                - authType
+                - branch
+                - repoURL
+                type: object
+            required:
+            - buildConfigRef
+            - buildMode
+            - destinationImage
+            - dockerCreds
+            - gitSource
+            type: object
+          status:
+            description: status defines the observed state of BuildRun
+            properties:
+              builderRef:
+                description: BuilderRef is the name of the kpack Build or Kaniko Pod
+                  doing the work
+                type: string
+              finishedAt:
+                description: FinishedAt is when the build completed or failed
+                format: date-time
+                type: string
+              imageDigest:
+                description: ImageDigest is the sha256 digest of the successfully
+                  built image
+                type: string
+              logStreamID:
+                description: LogStreamID is used to stream live logs from the pod
+                type: string
+              message:
+                description: Message contains additional error or progress information
+                type: string
+              phase:
+                description: Phase is the current state of the build
+                type: string
+              startedAt:
+                description: StartedAt is when the build began
+                format: date-time
+                type: string
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

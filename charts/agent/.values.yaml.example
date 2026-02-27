@@ -1,0 +1,17 @@
+# Agent chart — personal values template.
+# Copy this file to .values.yaml and fill in your own values.
+# .values.yaml is gitignored; never commit it.
+#
+# Usage:
+#   cp .values.yaml.example .values.yaml
+#   # edit .values.yaml with your real values
+#   helm upgrade --install kaja-agent ./agent -f .values.yaml -n kaja
+
+env:
+  # A human-readable name for this cluster (shown in the Kaja console)
+  clusterId: "my-cluster"
+  # Agent token — obtain from the Kaja console under Settings > Clusters
+  agentToken: "REPLACE_WITH_AGENT_TOKEN"
+  # gRPC endpoint of the Kaja platform
+  portServerUrl: "grpc.your-domain.com:443"
+  grpcUseTls: true

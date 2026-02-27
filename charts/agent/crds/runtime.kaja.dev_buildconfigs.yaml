@@ -1,0 +1,215 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.18.0
+  name: buildconfigs.runtime.kaja.dev
+spec:
+  group: runtime.kaja.dev
+  names:
+    kind: BuildConfig
+    listKind: BuildConfigList
+    plural: buildconfigs
+    singular: buildconfig
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .status.statusEmoji
+      name: Status
+      type: string
+    - jsonPath: .status.checksCompleted
+      name: Checks
+      type: string
+    - jsonPath: .spec.buildMode
+      name: Mode
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1
+    schema:
+      openAPIV3Schema:
+        description: BuildConfig is the Schema for the buildconfigs API
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: spec defines the desired state of BuildConfig
+            properties:
+              autoRollout:
+                description: AutoRollout configures optional ContainerApp update after
+                  success
+                properties:
+                  containerAppRef:
+                    type: string
+                  environmentRef:
+                    type: string
+                required:
+                - containerAppRef
+                - environmentRef
+                type: object
+              buildMode:
+                description: BuildMode specifies the build strategy (Auto, Buildpack,
+                  Dockerfile)
+                type: string
+              buildParams:
+                description: BuildParams controls optional build parameters
+                properties:
+                  buildArgs:
+                    additionalProperties:
+                      type: string
+                    type: object
+                  cacheEnabled:
+                    type: boolean
+                  dockerfilePath:
+                    type: string
+                  targetStage:
+                    type: string
+                type: object
+              clusterRef:
+                description: ClusterRef references the cluster where this resource
+                  is deployed
+                type: string
+              containerAppEnvironmentRef:
+                description: |-
+                  ContainerAppEnvironmentRef is the environment of the linked container app.
+                  Must be set if ContainerAppRef is set. Stored with distinct bson key to avoid
+                  conflicting with CommonMetadata.EnvironmentRef (cluster-scoping field).
+                type: string
+              containerAppRef:
+                description: |-
+                  ContainerAppRef is an optional reference to the container app this build config belongs to.
+                  When set, the build config is scoped to that container app and auto-rollout is implied.
+                type: string
+              description:
+                description: Description provides additional context about the resource
+                type: string
+              destinationImage:
+                description: DestinationImage is the full image ref to push (e.g.
+                  registry/repo:tag-template)
+                type: string
+              displayName:
+                description: DisplayName is a human-readable name for the resource
+                type: string
+              dockerCreds:
+                description: DockerCreds holds registry credentials
+                properties:
+                  password:
+                    type: string
+                  registry:
+                    type: string
+                  secretRef:
+                    type: string
+                  username:
+                    type: string
+                required:
+                - registry
+                type: object
+              environmentRef:
+                description: EnvironmentRef references the environment this resource
+                  belongs to
+                type: string
+              gitSource:
+                description: GitSource describes the repository to build from
+                properties:
+                  authType:
+                    type: string
+                  branch:
+                    type: string
+                  credentialRef:
+                    type: string
+                  repoURL:
+                    type: string
+                  subPath:
+                    type: string
+                required:
+                - authType
+                - branch
+                - repoURL
+                type: object
+            required:
+            - destinationImage
+            - dockerCreds
+            - gitSource
+            type: object
+          status:
+            description: status defines the observed state of BuildConfig
+            properties:
+              checksCompleted:
+                type: string
+              message:
+                type: string
+              pods:
+                description: Pods holds basic pod details for display (e.g. ContainerApp
+                  overview). Optional.
+                items:
+                  description: |-
+                    PodInfo holds basic pod details for display (e.g. on ContainerApp/HelmApp overview).
+                    Used when a resource has associated pods (e.g. ContainerApp's deployment, Helm release pods).
+                    Reason and Message surface container waiting/terminated state for debugging (e.g. ImagePullBackOff).
+                  properties:
+                    message:
+                      type: string
+                    name:
+                      type: string
+                    phase:
+                      type: string
+                    ready:
+                      type: string
+                    reason:
+                      type: string
+                    restartCount:
+                      format: int32
+                      type: integer
+                  required:
+                  - name
+                  - phase
+                  - ready
+                  - restartCount
+                  type: object
+                type: array
+              status:
+                type: string
+              statusEmoji:
+                type: string
+              steps:
+                items:
+                  properties:
+                    message:
+                      type: string
+                    name:
+                      type: string
+                    status:
+                      type: string
+                  required:
+                  - message
+                  - name
+                  - status
+                  type: object
+                type: array
+            required:
+            - status
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
