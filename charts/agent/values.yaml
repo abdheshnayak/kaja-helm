@@ -9,7 +9,7 @@
 replicaCount: 1
 
 image:
-  repository: ghcr.io/abdheshnayak/kaja-agent
+  repository: ghcr.io/abdheshnayak/agent
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""
