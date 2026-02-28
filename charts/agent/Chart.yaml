@@ -1,5 +1,5 @@
 apiVersion: v2
-name: agent
+name: kaja-agent
 description: >
   Kaja Agent — deployed into each managed cluster. Runs Kubernetes controllers and webhooks, syncs resource state to the Kaja platform, and executes commands received via gRPC long-polling.
 

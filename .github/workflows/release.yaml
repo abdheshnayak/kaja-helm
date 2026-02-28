@@ -40,12 +40,12 @@ jobs:
         run: echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io -u ${{ github.actor }} --password-stdin
 
       - name: Push chart to OCI (ghcr.io)
-        run: helm push agent-*.tgz oci://ghcr.io/${{ github.repository_owner }}
+        run: helm push kaja-agent-*.tgz oci://ghcr.io/${{ github.repository_owner }}
 
       - name: Create Release and upload chart
         uses: softprops/action-gh-release@v2
         with:
-          files: agent-*.tgz
+          files: kaja-agent-*.tgz
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
