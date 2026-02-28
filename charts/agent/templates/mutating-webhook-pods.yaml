@@ -1,0 +1,33 @@
+{{- if or .Values.webhook.enabled .Values.webhook.webhookOnly }}
+# MutatingWebhookConfiguration for Pods: injects placeholder nodeName and label when the
+# pod's namespace belongs to a paused Environment, so the environment controller skips
+# deleting these pods and avoids a delete-recreate loop.
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: operators-mutating-webhook-configuration
+  annotations:
+    # Certificate is created in kaja by webhook-cert.yaml
+    cert-manager.io/inject-ca-from: kaja/webhook-server-cert
+webhooks:
+  - name: mpod.kaja.dev
+    admissionReviewVersions: ["v1"]
+    sideEffects: None
+    failurePolicy: Ignore
+    timeoutSeconds: 10
+    rules:
+      - apiGroups: [""]
+        apiVersions: ["v1"]
+        operations: ["CREATE"]
+        resources: ["pods"]
+    namespaceSelector:
+      matchLabels:
+        kaja.dev/managed-by: environment-controller
+    clientConfig:
+      service:
+        name: {{ include "agent.fullname" . }}
+        namespace: {{ .Release.Namespace }}
+        path: /mutate-v1-pod
+        port: 9443
+      # caBundle is injected by cert-manager via the cert-manager.io/inject-ca-from annotation
+{{- end }}

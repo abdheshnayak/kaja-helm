@@ -53,7 +53,7 @@ spec:
             description: spec defines the desired state of BuildRun
             properties:
               autoRollout:
-                description: AutoRollout is the snapshot of the rollout config
+                description: AutoRollout is the blueprint of the rollout config
                 properties:
                   containerAppRef:
                     type: string
@@ -71,7 +71,7 @@ spec:
                   time)
                 type: string
               buildParams:
-                description: BuildParams is the snapshot of build parameters
+                description: BuildParams is the blueprint of build parameters
                 properties:
                   buildArgs:
                     additionalProperties:
@@ -99,8 +99,8 @@ spec:
                 description: DisplayName is a human-readable name for the resource
                 type: string
               dockerCreds:
-                description: DockerCreds is the snapshot of the credentials used for
-                  this run
+                description: DockerCreds is the blueprint of the credentials used
+                  for this run
                 properties:
                   password:
                     type: string
@@ -118,7 +118,7 @@ spec:
                   belongs to
                 type: string
               gitSource:
-                description: GitSource is the snapshot of the git config used for
+                description: GitSource is the blueprint of the git config used for
                   this run
                 properties:
                   authType:
