@@ -52,19 +52,12 @@ spec:
                     description: ServiceName specifies the name of the backend service
                     type: string
                   servicePort:
-                    description: |-
-                      ServicePort specifies the numeric port of the backend service.
-                      Ignored when ServicePortName is provided.
+                    description: ServicePort specifies the port of the backend service
                     format: int32
                     type: integer
-                  servicePortName:
-                    description: |-
-                      ServicePortName specifies the named port of the backend service (e.g. "http").
-                      When set this takes precedence over ServicePort, making the Ingress resilient
-                      to port-number changes in the ContainerApp.
-                    type: string
                 required:
                 - serviceName
+                - servicePort
                 type: object
               clusterRef:
                 description: ClusterRef references the cluster where this resource
@@ -105,19 +98,13 @@ spec:
                             service
                           type: string
                         servicePort:
-                          description: |-
-                            ServicePort specifies the numeric port of the backend service.
-                            Ignored when ServicePortName is provided.
+                          description: ServicePort specifies the port of the backend
+                            service
                           format: int32
                           type: integer
-                        servicePortName:
-                          description: |-
-                            ServicePortName specifies the named port of the backend service (e.g. "http").
-                            When set this takes precedence over ServicePort, making the Ingress resilient
-                            to port-number changes in the ContainerApp.
-                          type: string
                       required:
                       - serviceName
+                      - servicePort
                       type: object
                     host:
                       description: Host specifies the domain name for this rule

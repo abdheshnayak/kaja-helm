@@ -14,8 +14,8 @@ metadata:
 spec:
   secretName: webhook-server-cert
   dnsNames:
-  - {{ include "agent.fullname" . }}.{{ .Release.Namespace }}.svc
-  - {{ include "agent.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
+  - agent.kaja.svc
+  - agent.kaja.svc.cluster.local
   issuerRef:
     name: selfsigned-issuer
     kind: Issuer

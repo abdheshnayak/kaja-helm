@@ -76,6 +76,11 @@ spec:
                   GeneratedNamespace is the actual namespace name generated for this environment
                   This field is set by the controller and should not be modified by users
                 type: string
+              isBlueprint:
+                description: |-
+                  IsBlueprint marks this environment as a template/blueprint
+                  Blueprints don't create namespaces and are meant to be cloned
+                type: boolean
               labels:
                 additionalProperties:
                   type: string
@@ -92,6 +97,7 @@ spec:
                 description: |-
                   Variables defines key-value pairs that can be used in resource templates
                   These variables are available for substitution in all resources within this environment
+                  For blueprints, these variables serve as defaults that can be overridden during instantiation
                 type: object
             required:
             - paused

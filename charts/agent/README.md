@@ -15,7 +15,7 @@ CRDs are in the chart's `crds/` directory (Helm standard). They are installed on
 
 ### Quick Start (No Webhooks)
 ```bash
-helm install kaja-agent ./agent --namespace kaja --create-namespace
+helm install agent ./agent --namespace kaja --create-namespace
 ```
 
 ### With Webhooks (Recommended for Production)
@@ -31,7 +31,7 @@ kubectl wait --for=condition=available --timeout=300s \
 
 2. **Install Kaja Agent**:
 ```bash
-helm install kaja-agent ./agent \
+helm install agent ./agent \
   --namespace kaja \
   --create-namespace \
   --set webhook.enabled=true
@@ -39,7 +39,7 @@ helm install kaja-agent ./agent \
 
 ### Webhook-Only Mode (Testing)
 ```bash
-helm install kaja-agent ./agent \
+helm install agent ./agent \
   --namespace kaja \
   --create-namespace \
   --set webhook.enabled=true \
@@ -66,7 +66,7 @@ webhook:
 ## Upgrading
 
 ```bash
-helm upgrade kaja-agent ./agent --namespace kaja
+helm upgrade agent ./agent --namespace kaja
 ```
 
 Note: CRDs in `crds/` are not upgraded by Helm (per [Helm CRD best practices](https://helm.sh/docs/chart_best_practices/custom_resource_definitions/)). If a chart version includes CRD changes, apply them manually with `kubectl apply -f crds/` or reinstall in a new cluster.
@@ -74,8 +74,8 @@ Note: CRDs in `crds/` are not upgraded by Helm (per [Helm CRD best practices](ht
 ## Uninstalling
 
 ```bash
-# Remove Kaja Agent
-helm uninstall kaja-agent --namespace kaja
+# Remove agent
+helm uninstall agent --namespace kaja
 
 # Optionally remove cert-manager (if no other apps use it)
 kubectl delete -f https://github.com/cert-manager/cert-manager/releases/download/v1.13.3/cert-manager.yaml
@@ -124,5 +124,16 @@ mutation {
 }
 ```
 
-### Freeze environment
-Use the `freezeEnvironment` mutation to make an environment read-only (frozen). Unfreeze with `unfreezeEnvironment` when you want to edit again.
+### Blueprints
+Create environment templates:
+```graphql
+mutation {
+  createBlueprint(input: {
+    name: "template-env"
+    clusterName: "cluster01"
+  }) {
+    name
+    spec { isBlueprint }
+  }
+}
+```
