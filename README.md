@@ -16,24 +16,24 @@ Helm charts for [Kaja](https://kaja.dev) — deploy the Kaja agent and CRDs to c
 
 ## Quick start
 
-Install or upgrade from a [release](https://github.com/abdheshnayak/kaja-helm/releases) tarball or from the [GitHub Container Registry](https://github.com/abdheshnayak/kaja-helm/pkgs/container/agent) (OCI). Use `helm upgrade --install` so the same command is idempotent (installs if missing, upgrades if already installed).
+Install or upgrade from a [release](https://github.com/abdheshnayak/kaja-helm/releases) tarball or from the [GitHub Container Registry](https://github.com/abdheshnayak/kaja-helm/pkgs/container/kaja-agent-chart) (OCI). Use `helm upgrade --install` so the same command is idempotent (installs if missing, upgrades if already installed).
 
 **Release tarball** (works whenever a [release](https://github.com/abdheshnayak/kaja-helm/releases) exists):
 
 ```bash
-helm upgrade --install kaja-agent https://github.com/abdheshnayak/kaja-helm/releases/download/v0.0.1/agent-0.0.1.tgz \
+helm upgrade --install kaja-agent https://github.com/abdheshnayak/kaja-helm/releases/download/v0.0.1/kaja-agent-chart-0.0.1.tgz \
   --namespace kaja \
   --create-namespace \
   --set env.clusterId=mycluster \
   --set env.agentToken="YOUR_AGENT_TOKEN"
 ```
 
-Replace `v0.0.1` and `agent-0.0.1.tgz` with the [release](https://github.com/abdheshnayak/kaja-helm/releases) you want.
+Replace `v0.0.1` and `kaja-agent-chart-0.0.1.tgz` with the [release](https://github.com/abdheshnayak/kaja-helm/releases) you want.
 
 **OCI (ghcr.io):**
 
 ```bash
-helm upgrade --install kaja-agent oci://ghcr.io/abdheshnayak/agent \
+helm upgrade --install kaja-agent oci://ghcr.io/abdheshnayak/kaja-agent-chart \
   --version 0.0.1 \
   --namespace kaja \
   --create-namespace \
@@ -41,7 +41,7 @@ helm upgrade --install kaja-agent oci://ghcr.io/abdheshnayak/agent \
   --set env.agentToken="YOUR_AGENT_TOKEN"
 ```
 
-Replace `0.0.1` with the [release](https://github.com/abdheshnayak/kaja-helm/releases) version. If you see `not found`: ensure the Release workflow ran for that tag and the “Push chart to OCI” step succeeded; if the package is private, use the tarball or make the [package](https://github.com/abdheshnayak/kaja-helm/pkgs/container/agent) public.
+Replace `0.0.1` with the [release](https://github.com/abdheshnayak/kaja-helm/releases) version. If you see `not found`: ensure the Release workflow ran for that tag and the “Push chart to OCI” step succeeded; if the package is private, use the tarball or make the [package](https://github.com/abdheshnayak/kaja-helm/pkgs/container/kaja-agent-chart) public.
 
 ### From a local clone
 
@@ -123,4 +123,4 @@ Releases are built by GitHub Actions when you push a version tag.
    git push origin v0.0.1
    ```
 
-2. The workflow will set the chart version from the tag, lint and package the chart, push it to the [GitHub Container Registry](https://github.com/abdheshnayak/kaja-helm/pkgs/container/agent) as `ghcr.io/<owner>/agent`, and create a [GitHub Release](https://github.com/abdheshnayak/kaja-helm/releases) with `agent-<version>.tgz` attached.
+2. The workflow will set the chart version from the tag, lint and package the chart, push it to the [GitHub Container Registry](https://github.com/abdheshnayak/kaja-helm/pkgs/container/kaja-agent-chart) as `ghcr.io/<owner>/kaja-agent-chart`, and create a [GitHub Release](https://github.com/abdheshnayak/kaja-helm/releases) with `kaja-agent-chart-<version>.tgz` attached.
