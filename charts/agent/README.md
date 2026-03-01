@@ -74,7 +74,7 @@ Note: CRDs in `crds/` are not upgraded by Helm (per [Helm CRD best practices](ht
 ## Uninstalling
 
 ```bash
-# Remove agent
+# Remove Kaja Agent
 helm uninstall kaja-agent --namespace kaja
 
 # Optionally remove cert-manager (if no other apps use it)
@@ -124,16 +124,5 @@ mutation {
 }
 ```
 
-### Blueprints
-Create environment templates:
-```graphql
-mutation {
-  createBlueprint(input: {
-    name: "template-env"
-    clusterName: "cluster01"
-  }) {
-    name
-    spec { isBlueprint }
-  }
-}
-```
+### Freeze environment
+Use the `freezeEnvironment` mutation to make an environment read-only (frozen). Unfreeze with `unfreezeEnvironment` when you want to edit again.

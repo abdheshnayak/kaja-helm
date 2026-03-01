@@ -52,13 +52,26 @@ spec:
                     description: ServiceName specifies the name of the backend service
                     type: string
                   servicePort:
-                    description: ServicePort specifies the port of the backend service
+                    description: |-
+                      ServicePort specifies the numeric port of the backend service.
+                      Ignored when ServicePortName is provided.
                     format: int32
                     type: integer
+                  servicePortName:
+                    description: |-
+                      ServicePortName specifies the named port of the backend service (e.g. "http").
+                      When set this takes precedence over ServicePort, making the Ingress resilient
+                      to port-number changes in the ContainerApp.
+                    type: string
                 required:
                 - serviceName
-                - servicePort
                 type: object
+              backendNamespace:
+                description: BackendNamespace is the namespace where the backend Service
+                  lives. When set, the Ingress is created in this namespace so it
+                  can reference the Service (e.g. for HelmApp routes where the release
+                  is in a different namespace than the Route).
+                type: string
               clusterRef:
                 description: ClusterRef references the cluster where this resource
                   is deployed
@@ -98,13 +111,19 @@ spec:
                             service
                           type: string
                         servicePort:
-                          description: ServicePort specifies the port of the backend
-                            service
+                          description: |-
+                            ServicePort specifies the numeric port of the backend service.
+                            Ignored when ServicePortName is provided.
                           format: int32
                           type: integer
+                        servicePortName:
+                          description: |-
+                            ServicePortName specifies the named port of the backend service (e.g. "http").
+                            When set this takes precedence over ServicePort, making the Ingress resilient
+                            to port-number changes in the ContainerApp.
+                          type: string
                       required:
                       - serviceName
-                      - servicePort
                       type: object
                     host:
                       description: Host specifies the domain name for this rule
@@ -162,6 +181,36 @@ spec:
                   - phase
                   - ready
                   - restartCount
+                  type: object
+                type: array
+              services:
+                description: Services holds service details for the resource (e.g.
+                  HelmApp release services) for domain/route backend selection. Optional.
+                items:
+                  description: |-
+                    ServiceInfo holds basic service details for display and for selecting domain backend (e.g. HelmApp domain).
+                    Used when a resource has associated services (e.g. Helm release services).
+                  properties:
+                    name:
+                      type: string
+                    ports:
+                      items:
+                        description: ServicePortInfo holds a single port exposed by
+                          a service (for domain/route backend selection).
+                        properties:
+                          name:
+                            type: string
+                          port:
+                            format: int32
+                            type: integer
+                          protocol:
+                            type: string
+                        required:
+                        - port
+                        type: object
+                      type: array
+                  required:
+                  - name
                   type: object
                 type: array
               status:

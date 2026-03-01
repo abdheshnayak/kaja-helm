@@ -76,20 +76,6 @@ spec:
               displayName:
                 description: DisplayName is a human-readable name for the resource
                 type: string
-              domain:
-                description: Domain configures a custom or generated domain for the
-                  app
-                properties:
-                  custom:
-                    description: Custom indicates if this is a user-provided custom
-                      domain or auto-generated
-                    type: boolean
-                  name:
-                    description: Name of the domain (e.g. app.domain.com)
-                    type: string
-                required:
-                - name
-                type: object
               environmentRef:
                 description: EnvironmentRef references the environment this resource
                   belongs to
@@ -186,6 +172,36 @@ spec:
                   - phase
                   - ready
                   - restartCount
+                  type: object
+                type: array
+              services:
+                description: Services holds service details for the resource (e.g.
+                  HelmApp release services) for domain/route backend selection. Optional.
+                items:
+                  description: |-
+                    ServiceInfo holds basic service details for display and for selecting domain backend (e.g. HelmApp domain).
+                    Used when a resource has associated services (e.g. Helm release services).
+                  properties:
+                    name:
+                      type: string
+                    ports:
+                      items:
+                        description: ServicePortInfo holds a single port exposed by
+                          a service (for domain/route backend selection).
+                        properties:
+                          name:
+                            type: string
+                          port:
+                            format: int32
+                            type: integer
+                          protocol:
+                            type: string
+                        required:
+                        - port
+                        type: object
+                      type: array
+                  required:
+                  - name
                   type: object
                 type: array
               status:
