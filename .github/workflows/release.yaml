@@ -40,7 +40,11 @@ jobs:
           echo "tarball=$(ls *.tgz)" >> $GITHUB_OUTPUT
 
       - name: Login to GitHub Container Registry
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io -u ${{ github.actor }} --password-stdin
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Push chart to OCI (ghcr.io)
         run: helm push ${{ steps.package.outputs.tarball }} oci://ghcr.io/${{ github.repository_owner }}
