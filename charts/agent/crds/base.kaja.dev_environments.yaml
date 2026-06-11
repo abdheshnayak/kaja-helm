@@ -81,11 +81,40 @@ spec:
                   type: string
                 description: Labels for additional metadata
                 type: object
+              network:
+                description: |-
+                  Network defines default ingress/egress rules for this environment's namespace.
+                  When nil or empty, only traffic within the same namespace is allowed (secure default).
+                properties:
+                  allowEgressToEnvironments:
+                    description: |-
+                      AllowEgressToEnvironments lists environment names this environment's pods may connect to (e.g. shared Helm apps).
+                      Empty or nil means only same-namespace egress is allowed.
+                    items:
+                      type: string
+                    type: array
+                  allowEgressToInternet:
+                    description: AllowEgressToInternet allows egress to 0.0.0.0/0
+                      when true. Default false for locked-down environments.
+                    type: boolean
+                  allowIngressFromEnvironments:
+                    description: |-
+                      AllowIngressFromEnvironments lists environment names whose namespaces may send traffic into this environment.
+                      Empty or nil means only same-namespace ingress is allowed. Used for "exposed" Helm apps in this environment.
+                    items:
+                      type: string
+                    type: array
+                type: object
               paused:
                 description: |-
                   Paused indicates whether this environment is paused
                   When paused, all pods are kept in Pending state to save resources
                 type: boolean
+              sourceEnvironmentRef:
+                description: |-
+                  SourceEnvironmentRef names a parent environment on the same cluster.
+                  Variables are merged parent-first; spec.Variables on this environment override the parent chain.
+                type: string
               variables:
                 additionalProperties:
                   type: string

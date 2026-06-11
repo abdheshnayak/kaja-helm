@@ -1,21 +1,21 @@
 apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
-  name: selfsigned-issuer
-  namespace: kaja
+  name: {{ include "agent.fullname" . }}-selfsigned-issuer
+  namespace: {{ .Release.Namespace }}
 spec:
   selfSigned: {}
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: webhook-server-cert
-  namespace: kaja
+  name: {{ include "agent.fullname" . }}-webhook-cert
+  namespace: {{ .Release.Namespace }}
 spec:
-  secretName: webhook-server-cert
+  secretName: {{ include "agent.fullname" . }}-webhook-cert
   dnsNames:
   - {{ include "agent.fullname" . }}.{{ .Release.Namespace }}.svc
   - {{ include "agent.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
   issuerRef:
-    name: selfsigned-issuer
+    name: {{ include "agent.fullname" . }}-selfsigned-issuer
     kind: Issuer

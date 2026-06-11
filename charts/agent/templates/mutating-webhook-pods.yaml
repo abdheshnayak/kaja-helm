@@ -5,10 +5,10 @@
 apiVersion: admissionregistration.k8s.io/v1
 kind: MutatingWebhookConfiguration
 metadata:
-  name: operators-mutating-webhook-configuration
+  name: {{ include "agent.fullname" . }}-mutating-webhook
   annotations:
-    # Certificate is created in kaja by webhook-cert.yaml
-    cert-manager.io/inject-ca-from: kaja/webhook-server-cert
+    # Certificate is created by webhook-cert.yaml
+    cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/{{ include "agent.fullname" . }}-webhook-cert
 webhooks:
   - name: mpod.kaja.dev
     admissionReviewVersions: ["v1"]

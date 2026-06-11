@@ -12,7 +12,7 @@ spec:
       protocol: TCP
       name: http
     {{- if or .Values.webhook.enabled .Values.webhook.webhookOnly }}
-    - port: 9443
+    - port: {{ .Values.webhook.port | default 9443 }}
       targetPort: webhook
       protocol: TCP
       name: webhook

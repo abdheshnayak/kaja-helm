@@ -8,10 +8,11 @@
 #   helm upgrade --install kaja-agent ./agent -f .values.yaml -n kaja
 
 env:
-  # A human-readable name for this cluster (shown in the Kaja console)
-  clusterId: "my-cluster"
-  # Agent token — obtain from the Kaja console under Settings > Clusters
+  # Agent token — obtain from the Kaja console under Settings > Clusters.
+  # The platform resolves the cluster identity from this token; no clusterId needed.
   agentToken: "REPLACE_WITH_AGENT_TOKEN"
+  # agentId: only needed when running multiple agents on the same Kubernetes cluster.
+  # agentId: "my-second-agent"
   # gRPC endpoint of the Kaja platform
   portServerUrl: "grpc.your-domain.com:443"
   grpcUseTls: true

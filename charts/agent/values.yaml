@@ -48,21 +48,41 @@ service:
 
 # Environment variables for the agent
 env:
-  # Cluster identification — set a unique name for each cluster
-  clusterId: ""
-  # Agent authentication token — Required, obtain from the Kaja console
+  # Agent authentication token — required, obtain from the Kaja console.
+  # The platform resolves the cluster identity from this token at login,
+  # so no cluster name/id needs to be configured here.
   agentToken: ""
+  # agentId: optional override that scopes resource names/namespaces. Set only
+  # when running multiple agents on the same Kubernetes cluster.
+  agentId: ""
   # gRPC server URL of the Kaja platform
   portServerUrl: "grpc.server.kaja.dev:443"
   # Use TLS for gRPC (recommended for production; set false for local dev / NodePort)
   grpcUseTls: true
   logLevel: "info"
+  # Automatic HTTPS. When true, the agent creates a Let's Encrypt PRODUCTION ClusterIssuer
+  # using the cert-manager that the agent already requires (for its admission webhook), so
+  # routes get trusted certificates with no manual TLS secrets. Requires an ingress
+  # controller to already be present in the cluster.
+  autoHttps: false
+  # Contact email for the Let's Encrypt account. Required when autoHttps is true.
+  acmeEmail: ""
+  # Advanced: use an existing cert-manager ClusterIssuer instead of the auto-provisioned one.
+  # When set, this overrides autoHttps's issuer. Leave empty for the default behaviour.
+  clusterIssuer: ""
+  # Ingress class pinned on generated Ingresses and used by the ClusterIssuer's HTTP-01
+  # solver. Defaults to "nginx" in the agent when empty.
+  ingressClass: ""
 
 # Webhook configuration
 webhook:
   enabled: true
   # Run only the webhook server without controllers.
   webhookOnly: false
+  # Webhook server port (must be unique per agent if multiple agents share a cluster)
+  port: 9443
+  # Health probe bind address (must be unique per agent if co-located)
+  healthProbeAddr: ":8081"
   certPath: "/tmp/k8s-webhook-server/serving-certs"
   certName: "tls.crt"
   certKey: "tls.key"

@@ -80,6 +80,18 @@ spec:
                 description: EnvironmentRef references the environment this resource
                   belongs to
                 type: string
+              exposeToEnvironments:
+                description: |-
+                  ExposeToEnvironments limits which environment names may access this app when ExposeToOtherEnvironments is true.
+                  Empty means all envs in the Environment's allowIngressFromEnvironments may access; non-empty restricts to this list.
+                items:
+                  type: string
+                type: array
+              exposeToOtherEnvironments:
+                description: |-
+                  ExposeToOtherEnvironments when true allows other environment namespaces to reach this app's services.
+                  Only applies when the Environment has allowIngressFromEnvironments set; then those envs can access this app.
+                type: boolean
               labels:
                 additionalProperties:
                   type: string

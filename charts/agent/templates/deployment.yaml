@@ -43,6 +43,9 @@ spec:
           {{- if or .Values.webhook.enabled .Values.webhook.webhookOnly }}
           command: ["./operator-controller"]
           args:
+            {{- if .Values.env.agentId }}
+            - --agent-id={{ .Values.env.agentId }}
+            {{- end }}
             {{- if .Values.webhook.enabled }}
             - --enable-webhooks
             {{- end }}
@@ -58,6 +61,12 @@ spec:
             {{- if .Values.webhook.certKey }}
             - --webhook-cert-key={{ .Values.webhook.certKey }}
             {{- end }}
+            {{- if .Values.webhook.port }}
+            - --webhook-port={{ .Values.webhook.port }}
+            {{- end }}
+            {{- if .Values.webhook.healthProbeAddr }}
+            - --health-probe-bind-address={{ .Values.webhook.healthProbeAddr }}
+            {{- end }}
           {{- end }}
           ports:
             - name: http
@@ -65,14 +74,16 @@ spec:
               protocol: TCP
             {{- if or .Values.webhook.enabled .Values.webhook.webhookOnly }}
             - name: webhook
-              containerPort: 9443
+              containerPort: {{ .Values.webhook.port | default 9443 }}
               protocol: TCP
             {{- end }}
           env:
-            - name: CLUSTER_ID
-              value: {{ required "env.clusterId is required when installing the agent chart" .Values.env.clusterId | quote }}
             - name: AGENT_TOKEN
               value: {{ required "env.agentToken is required when installing the agent chart" .Values.env.agentToken | quote }}
+            {{- if .Values.env.agentId }}
+            - name: AGENT_ID
+              value: {{ .Values.env.agentId | quote }}
+            {{- end }}
             {{- if .Values.env.portServerUrl }}
             - name: PORT_SERVER_URL
               value: {{ .Values.env.portServerUrl | quote }}
@@ -84,6 +95,23 @@ spec:
             {{- if .Values.env.logLevel }}
             - name: LOG_LEVEL
               value: {{ .Values.env.logLevel | quote }}
+            {{- end }}
+            {{- if .Values.env.autoHttps }}
+            # Agent creates a Let's Encrypt ClusterIssuer (reusing the already-required
+            # cert-manager) so routes get automatic HTTPS with no manual TLS secrets.
+            - name: KAJA_AUTO_HTTPS
+              value: "true"
+            - name: KAJA_ACME_EMAIL
+              value: {{ required "env.acmeEmail is required when env.autoHttps is true" .Values.env.acmeEmail | quote }}
+            {{- end }}
+            {{- if .Values.env.clusterIssuer }}
+            # Explicit issuer override (e.g. an existing cert-manager ClusterIssuer).
+            - name: KAJA_CLUSTER_ISSUER
+              value: {{ .Values.env.clusterIssuer | quote }}
+            {{- end }}
+            {{- if .Values.env.ingressClass }}
+            - name: KAJA_INGRESS_CLASS
+              value: {{ .Values.env.ingressClass | quote }}
             {{- end }}
           livenessProbe:
             exec:
@@ -131,7 +159,7 @@ spec:
       volumes:
         - name: webhook-cert
           secret:
-            secretName: webhook-server-cert
+            secretName: {{ include "agent.fullname" . }}-webhook-cert
       {{- end }}
       {{- with .Values.volumes }}
       volumes:
