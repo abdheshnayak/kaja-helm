@@ -7,6 +7,9 @@ CHART_VERSION="${2:-}"
 echo "=== Installing k3s ==="
 curl -sfL https://get.k3s.io | sh -
 
+echo "=== Waiting 10s for k3s to initialize ==="
+sleep 10
+
 echo "=== Waiting for node to be Ready ==="
 sudo k3s kubectl wait --for=condition=Ready node --all --timeout=60s
 
