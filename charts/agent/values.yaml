@@ -60,19 +60,6 @@ env:
   # Use TLS for gRPC (recommended for production; set false for local dev / NodePort)
   grpcUseTls: true
   logLevel: "info"
-  # Automatic HTTPS. When true, the agent creates a Let's Encrypt PRODUCTION ClusterIssuer
-  # using the cert-manager that the agent already requires (for its admission webhook), so
-  # routes get trusted certificates with no manual TLS secrets. Requires an ingress
-  # controller to already be present in the cluster.
-  autoHttps: false
-  # Contact email for the Let's Encrypt account. Required when autoHttps is true.
-  acmeEmail: ""
-  # Advanced: use an existing cert-manager ClusterIssuer instead of the auto-provisioned one.
-  # When set, this overrides autoHttps's issuer. Leave empty for the default behaviour.
-  clusterIssuer: ""
-  # Ingress class pinned on generated Ingresses and used by the ClusterIssuer's HTTP-01
-  # solver. Defaults to "nginx" in the agent when empty.
-  ingressClass: ""
 
 # Webhook configuration
 webhook:
