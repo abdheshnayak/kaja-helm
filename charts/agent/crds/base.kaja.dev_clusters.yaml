@@ -63,6 +63,25 @@ spec:
                 description: EnvironmentRef references the environment this resource
                   belongs to
                 type: string
+              https:
+                description: HTTPS configures the cluster's automatic-HTTPS behaviour.
+                properties:
+                  acmeEmail:
+                    description: ACMEEmail is the contact email for Let's Encrypt
+                      account registration.
+                    type: string
+                  autoBootstrap:
+                    description: AutoBootstrap allows the agent to install ingress-nginx
+                      + cert-manager without UI confirmation.
+                    type: boolean
+                  disabled:
+                    description: Disabled fully disables automatic HTTPS reconciliation.
+                    type: boolean
+                  preferredIssuer:
+                    description: PreferredIssuer pins a specific ClusterIssuer name
+                      (overrides auto-pick).
+                    type: string
+                type: object
             type: object
           status:
             description: ClusterStatus defines the observed state of Cluster
@@ -130,6 +149,98 @@ spec:
                 x-kubernetes-list-map-keys:
                 - type
                 x-kubernetes-list-type: map
+              https:
+                description: HTTPS provides the observed state of automatic HTTPS
+                  in the cluster.
+                properties:
+                  activeIssuer:
+                    description: |-
+                      ActiveIssuer is the ClusterIssuer name routes should use. Empty if none yet.
+                      Stage (a) leaves this empty — the picker in stage (b) will set it.
+                    type: string
+                  candidates:
+                    description: Candidates is the list of discovered ClusterIssuers
+                      in the cluster.
+                    items:
+                      description: IssuerCandidate describes a ClusterIssuer discovered
+                        in the cluster.
+                      properties:
+                        email:
+                          description: Email is the ACME account contact email.
+                          type: string
+                        ingressClass:
+                          description: IngressClass declared on the issuer's http01
+                            solver.
+                          type: string
+                        isAcme:
+                          description: IsACME indicates the issuer is ACME-based (false
+                            → likely private CA, ignore for public hosts).
+                          type: boolean
+                        name:
+                          description: Name of the ClusterIssuer.
+                          type: string
+                        ready:
+                          description: Ready reflects the Ready condition on the ClusterIssuer.
+                          type: boolean
+                        server:
+                          description: Server is the ACME server URL (empty for non-ACME
+                            issuers).
+                          type: string
+                        solverType:
+                          description: 'SolverType: "http01" | "dns01" | "".'
+                          type: string
+                      required:
+                      - name
+                      type: object
+                    type: array
+                  certManager:
+                    description: CertManager observed state.
+                    properties:
+                      installed:
+                        description: Installed indicates whether cert-manager is present
+                          in the cluster.
+                        type: boolean
+                      namespace:
+                        description: Namespace where cert-manager is installed.
+                        type: string
+                      version:
+                        description: Version of cert-manager, if detected.
+                        type: string
+                    type: object
+                  ingressClass:
+                    description: IngressClass resolved from the detected controller
+                      (e.g. "nginx", "traefik").
+                    type: string
+                  pendingDecision:
+                    description: |-
+                      PendingDecision is populated only when human input is required.
+                      Stage (a) leaves this nil.
+                    properties:
+                      options:
+                        description: Options the user can choose from (issuer names,
+                          install actions, etc.).
+                        items:
+                          type: string
+                        type: array
+                      plan:
+                        description: Plan is a human-readable preview of what the
+                          agent will do once the decision is approved.
+                        type: string
+                      question:
+                        description: Question identifier — e.g. "missing_acme_email"
+                          | "ambiguous_issuer" | "no_ingress_controller".
+                        type: string
+                    required:
+                    - question
+                    type: object
+                  phase:
+                    description: 'Phase: Discovering | Ready | NeedsApproval | Installing
+                      | Failed'
+                    type: string
+                  reason:
+                    description: 'Reason: Reused | Created | Provided | None'
+                    type: string
+                type: object
               message:
                 type: string
               network:

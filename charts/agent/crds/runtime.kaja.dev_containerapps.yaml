@@ -146,7 +146,16 @@ spec:
                   initialDelaySeconds:
                     format: int32
                     type: integer
+                  path:
+                    description: Path is the HTTP path to probe (e.g. /health). When
+                      empty, the probe is disabled.
+                    type: string
                   periodSeconds:
+                    format: int32
+                    type: integer
+                  port:
+                    description: Port is the container port to probe. Defaults to
+                      the app's first port when unset.
                     format: int32
                     type: integer
                   successThreshold:
@@ -185,7 +194,16 @@ spec:
                   initialDelaySeconds:
                     format: int32
                     type: integer
+                  path:
+                    description: Path is the HTTP path to probe (e.g. /health). When
+                      empty, the probe is disabled.
+                    type: string
                   periodSeconds:
+                    format: int32
+                    type: integer
+                  port:
+                    description: Port is the container port to probe. Defaults to
+                      the app's first port when unset.
                     format: int32
                     type: integer
                   successThreshold:
@@ -196,6 +214,7 @@ spec:
                     type: integer
                 type: object
               replicas:
+                default: 1
                 description: Replicas specifies the number of desired replicas
                 format: int32
                 type: integer
@@ -308,7 +327,16 @@ spec:
                   initialDelaySeconds:
                     format: int32
                     type: integer
+                  path:
+                    description: Path is the HTTP path to probe (e.g. /health). When
+                      empty, the probe is disabled.
+                    type: string
                   periodSeconds:
+                    format: int32
+                    type: integer
+                  port:
+                    description: Port is the container port to probe. Defaults to
+                      the app's first port when unset.
                     format: int32
                     type: integer
                   successThreshold:

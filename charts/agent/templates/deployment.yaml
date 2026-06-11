@@ -96,6 +96,23 @@ spec:
             - name: LOG_LEVEL
               value: {{ .Values.env.logLevel | quote }}
             {{- end }}
+            {{- if .Values.env.autoHttps }}
+            # Agent creates a Let's Encrypt ClusterIssuer (reusing the already-required
+            # cert-manager) so routes get automatic HTTPS with no manual TLS secrets.
+            - name: KAJA_AUTO_HTTPS
+              value: "true"
+            - name: KAJA_ACME_EMAIL
+              value: {{ required "env.acmeEmail is required when env.autoHttps is true" .Values.env.acmeEmail | quote }}
+            {{- end }}
+            {{- if .Values.env.clusterIssuer }}
+            # Explicit issuer override (e.g. an existing cert-manager ClusterIssuer).
+            - name: KAJA_CLUSTER_ISSUER
+              value: {{ .Values.env.clusterIssuer | quote }}
+            {{- end }}
+            {{- if .Values.env.ingressClass }}
+            - name: KAJA_INGRESS_CLASS
+              value: {{ .Values.env.ingressClass | quote }}
+            {{- end }}
           livenessProbe:
             exec:
               command:
