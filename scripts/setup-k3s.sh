@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+AGENT_TOKEN="${1:-}"
+CHART_VERSION="${2:-}"
+
 echo "=== Installing k3s ==="
 curl -sfL https://get.k3s.io | sh -
 
@@ -22,5 +25,15 @@ kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/
 
 echo "=== Waiting 30s for cert-manager pods to start ==="
 sleep 30
+
+echo "=== Installing Kaja Agent ==="
+if [ -n "$AGENT_TOKEN" ] && [ -n "$CHART_VERSION" ]; then
+  helm upgrade --install kaja-agent "https://github.com/abdheshnayak/kaja-helm/releases/download/v${CHART_VERSION}/kaja-agent-chart-${CHART_VERSION}.tgz" \
+    --namespace kaja \
+    --create-namespace \
+    --set env.agentToken="${AGENT_TOKEN}"
+else
+  echo "Skipping agent install: AGENT_TOKEN and/or CHART_VERSION not provided"
+fi
 
 echo "=== Done ==="
