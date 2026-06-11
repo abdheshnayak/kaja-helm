@@ -26,6 +26,22 @@ spec:
               may reject unrecognized values.
               More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
             type: string
+          httpsStatus:
+            description: |-
+              httpsStatus holds the observed HTTPS/TLS certificate state for this route.
+              Updated by the route controller independently of the main status checks.
+            properties:
+              message:
+                description: Message provides a human-readable description of the
+                  current phase
+                type: string
+              phase:
+                description: 'Phase is the current HTTPS certificate phase: HTTP |
+                  Issuing | Ready | Failed'
+                type: string
+            required:
+            - phase
+            type: object
           kind:
             description: |-
               Kind is a string value representing the REST resource this object represents.

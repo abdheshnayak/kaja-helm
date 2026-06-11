@@ -75,7 +75,10 @@ spec:
                       + cert-manager without UI confirmation.
                     type: boolean
                   disabled:
-                    description: Disabled fully disables automatic HTTPS reconciliation.
+                    description: |-
+                      Disabled fully disables automatic HTTPS reconciliation.
+                      No omitempty on json so that "disabled: false" is always serialised; omitting
+                      false would leave the old true value in place when copySpec replaces the spec.
                     type: boolean
                   preferredIssuer:
                     description: PreferredIssuer pins a specific ClusterIssuer name
