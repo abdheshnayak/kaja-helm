@@ -104,15 +104,6 @@ spec:
             - name: KAJA_ACME_EMAIL
               value: {{ required "env.acmeEmail is required when env.autoHttps is true" .Values.env.acmeEmail | quote }}
             {{- end }}
-            {{- if .Values.env.clusterIssuer }}
-            # Explicit issuer override (e.g. an existing cert-manager ClusterIssuer).
-            - name: KAJA_CLUSTER_ISSUER
-              value: {{ .Values.env.clusterIssuer | quote }}
-            {{- end }}
-            {{- if .Values.env.ingressClass }}
-            - name: KAJA_INGRESS_CLASS
-              value: {{ .Values.env.ingressClass | quote }}
-            {{- end }}
           livenessProbe:
             exec:
               command:

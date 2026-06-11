@@ -67,12 +67,6 @@ env:
   autoHttps: false
   # Contact email for the Let's Encrypt account. Required when autoHttps is true.
   acmeEmail: ""
-  # Advanced: use an existing cert-manager ClusterIssuer instead of the auto-provisioned one.
-  # When set, this overrides autoHttps's issuer. Leave empty for the default behaviour.
-  clusterIssuer: ""
-  # Ingress class pinned on generated Ingresses and used by the ClusterIssuer's HTTP-01
-  # solver. Defaults to "nginx" in the agent when empty.
-  ingressClass: ""
 
 # Webhook configuration
 webhook:
