@@ -58,11 +58,11 @@ spec:
                 properties:
                   containerAppRef:
                     type: string
-                  environmentRef:
+                  projectRef:
                     type: string
                 required:
                 - containerAppRef
-                - environmentRef
+                - projectRef
                 type: object
               buildMode:
                 description: BuildMode specifies the build strategy (Auto, Buildpack,
@@ -86,11 +86,11 @@ spec:
                 description: ClusterRef references the cluster where this resource
                   is deployed
                 type: string
-              containerAppEnvironmentRef:
+              containerAppProjectRef:
                 description: |-
-                  ContainerAppEnvironmentRef is the environment of the linked container app.
+                  ContainerAppProjectRef is the project of the linked container app.
                   Must be set if ContainerAppRef is set. Stored with distinct bson key to avoid
-                  conflicting with CommonMetadata.EnvironmentRef (cluster-scoping field).
+                  conflicting with CommonMetadata.ProjectRef (cluster-scoping field).
                 type: string
               containerAppRef:
                 description: |-
@@ -121,10 +121,6 @@ spec:
                 required:
                 - registry
                 type: object
-              environmentRef:
-                description: EnvironmentRef references the environment this resource
-                  belongs to
-                type: string
               gitSource:
                 description: GitSource describes the repository to build from
                 properties:
@@ -143,6 +139,10 @@ spec:
                 - branch
                 - repoURL
                 type: object
+              projectRef:
+                description: ProjectRef references the project this resource belongs
+                  to
+                type: string
             required:
             - destinationImage
             - dockerCreds

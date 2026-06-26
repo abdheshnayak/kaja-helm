@@ -98,10 +98,6 @@ spec:
               displayName:
                 description: DisplayName is a human-readable name for the resource
                 type: string
-              environmentRef:
-                description: EnvironmentRef references the environment this resource
-                  belongs to
-                type: string
               host:
                 description: Host specifies the domain name for the route
                 type: string
@@ -112,6 +108,10 @@ spec:
                 type: object
               path:
                 description: Path specifies the URL path for the route
+                type: string
+              projectRef:
+                description: ProjectRef references the project this resource belongs
+                  to
                 type: string
               rules:
                 description: Rules specifies the routing rules for the route

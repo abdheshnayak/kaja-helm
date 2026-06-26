@@ -57,11 +57,11 @@ spec:
                 properties:
                   containerAppRef:
                     type: string
-                  environmentRef:
+                  projectRef:
                     type: string
                 required:
                 - containerAppRef
-                - environmentRef
+                - projectRef
                 type: object
               buildConfigRef:
                 description: BuildConfigRef is the name of the parent BuildConfig
@@ -113,10 +113,6 @@ spec:
                 required:
                 - registry
                 type: object
-              environmentRef:
-                description: EnvironmentRef references the environment this resource
-                  belongs to
-                type: string
               gitSource:
                 description: GitSource is the blueprint of the git config used for
                   this run
@@ -136,6 +132,10 @@ spec:
                 - branch
                 - repoURL
                 type: object
+              projectRef:
+                description: ProjectRef references the project this resource belongs
+                  to
+                type: string
             required:
             - buildConfigRef
             - buildMode

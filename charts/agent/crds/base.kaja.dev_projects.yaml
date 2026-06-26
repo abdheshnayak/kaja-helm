@@ -67,10 +67,6 @@ spec:
               displayName:
                 description: DisplayName is a human-readable name for the resource
                 type: string
-              environmentRef:
-                description: EnvironmentRef references the environment this resource
-                  belongs to
-                type: string
               generatedNamespace:
                 description: |-
                   GeneratedNamespace is the actual namespace name generated for this project
@@ -110,6 +106,10 @@ spec:
                   Paused indicates whether this project is paused
                   When paused, all pods are kept in Pending state to save resources
                 type: boolean
+              projectRef:
+                description: ProjectRef references the project this resource belongs
+                  to
+                type: string
               sourceProjectRef:
                 description: |-
                   SourceProjectRef names a parent project on the same cluster.

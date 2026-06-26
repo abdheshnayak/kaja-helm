@@ -18,7 +18,7 @@ rules:
 #   resources:
 #   - configs
 #   - domains
-#   - environments
+#   - projects
 #   - secrets
 #   verbs:
 #   - get

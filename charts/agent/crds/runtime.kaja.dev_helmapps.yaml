@@ -76,22 +76,18 @@ spec:
               displayName:
                 description: DisplayName is a human-readable name for the resource
                 type: string
-              environmentRef:
-                description: EnvironmentRef references the environment this resource
-                  belongs to
-                type: string
-              exposeToEnvironments:
+              exposeToOtherProjects:
                 description: |-
-                  ExposeToEnvironments limits which environment names may access this app when ExposeToOtherEnvironments is true.
-                  Empty means all envs in the Environment's allowIngressFromEnvironments may access; non-empty restricts to this list.
+                  ExposeToOtherProjects when true allows other project namespaces to reach this app's services.
+                  Only applies when the Project has allowIngressFromProjects set; then those projects can access this app.
+                type: boolean
+              exposeToProjects:
+                description: |-
+                  ExposeToProjects limits which project names may access this app when ExposeToOtherProjects is true.
+                  Empty means all projects in the Project's allowIngressFromProjects may access; non-empty restricts to this list.
                 items:
                   type: string
                 type: array
-              exposeToOtherEnvironments:
-                description: |-
-                  ExposeToOtherEnvironments when true allows other environment namespaces to reach this app's services.
-                  Only applies when the Environment has allowIngressFromEnvironments set; then those envs can access this app.
-                type: boolean
               labels:
                 additionalProperties:
                   type: string
@@ -99,6 +95,10 @@ spec:
                 type: object
               namespace:
                 description: Namespace where the release will be installed
+                type: string
+              projectRef:
+                description: ProjectRef references the project this resource belongs
+                  to
                 type: string
               releaseName:
                 description: ReleaseName is the name of the Helm release

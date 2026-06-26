@@ -111,10 +111,6 @@ spec:
                   - name
                   type: object
                 type: array
-              environmentRef:
-                description: EnvironmentRef references the environment this resource
-                  belongs to
-                type: string
               image:
                 description: Image specifies the container image to run
                 type: string
@@ -185,6 +181,10 @@ spec:
                   - containerPort
                   type: object
                 type: array
+              projectRef:
+                description: ProjectRef references the project this resource belongs
+                  to
+                type: string
               readinessProbe:
                 description: ReadinessProbe defines the readiness probe
                 properties:

@@ -113,16 +113,16 @@ kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/
 
 ## Features
 
-### Pause/Resume Environments
-Pause an environment to stop all pods:
+### Pause/Resume Projects
+Pause a project to stop all pods:
 ```graphql
 mutation {
-  pauseEnvironment(name: "myenv", clusterName: "cluster01") {
+  pauseProject(name: "myproject", clusterName: "cluster01") {
     name
     spec { paused }
   }
 }
 ```
 
-### Freeze environment
-Use the `freezeEnvironment` mutation to make an environment read-only (frozen). Unfreeze with `unfreezeEnvironment` when you want to edit again.
+### Freeze project
+Use the `freezeProject` mutation to make a project read-only (frozen). Unfreeze with `unfreezeProject` when you want to edit again.

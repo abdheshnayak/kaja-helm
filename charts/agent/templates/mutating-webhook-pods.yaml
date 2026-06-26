@@ -1,6 +1,6 @@
 {{- if or .Values.webhook.enabled .Values.webhook.webhookOnly }}
 # MutatingWebhookConfiguration for Pods: injects placeholder nodeName and label when the
-# pod's namespace belongs to a paused Environment, so the environment controller skips
+# pod's namespace belongs to a paused Project, so the project controller skips
 # deleting these pods and avoids a delete-recreate loop.
 apiVersion: admissionregistration.k8s.io/v1
 kind: MutatingWebhookConfiguration
@@ -22,7 +22,7 @@ webhooks:
         resources: ["pods"]
     namespaceSelector:
       matchLabels:
-        kaja.dev/managed-by: environment-controller
+        kaja.dev/managed-by: project-controller
     clientConfig:
       service:
         name: {{ include "agent.fullname" . }}
