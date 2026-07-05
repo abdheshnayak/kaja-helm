@@ -168,7 +168,37 @@ spec:
             properties:
               checksCompleted:
                 type: string
+              events:
+                description: Events holds recent Warning events for the resource's
+                  workload, collected best-effort. Optional.
+                items:
+                  description: |-
+                    EventInfo holds a recent Warning Kubernetes event related to the resource's workload
+                    (Deployment/ReplicaSet/Pod), collected best-effort. Powers a human-readable health reason
+                    and (later) an events feed. Optional.
+                  properties:
+                    count:
+                      format: int32
+                      type: integer
+                    lastSeen:
+                      type: string
+                    message:
+                      type: string
+                    object:
+                      type: string
+                    reason:
+                      type: string
+                  required:
+                  - reason
+                  type: object
+                type: array
               message:
+                type: string
+              phase:
+                description: |-
+                  Phase is the derived, honest workload health phase (e.g. Running, Crashing, ImageError) computed
+                  from the actual Deployment + pod state — the developer-facing headline. See DeriveWorkloadHealth.
+                  The apply-step Checks above remain secondary "apply progress" detail, not the headline.
                 type: string
               pods:
                 description: Pods holds basic pod details for display (e.g. ContainerApp
@@ -199,6 +229,10 @@ spec:
                   - restartCount
                   type: object
                 type: array
+              reason:
+                description: Reason is a plain-language explanation of Phase (e.g.
+                  "Couldn't pull your image.").
+                type: string
               services:
                 description: Services holds service details for the resource (e.g.
                   HelmApp release services) for domain/route backend selection. Optional.
