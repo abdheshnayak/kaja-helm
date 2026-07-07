@@ -177,6 +177,10 @@ spec:
                 description: StartedAt is when the build began
                 format: date-time
                 type: string
+              subPhase:
+                description: SubPhase gives finer-grained progress detail while Phase
+                  == Building
+                type: string
             type: object
         required:
         - spec
