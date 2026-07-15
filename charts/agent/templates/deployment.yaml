@@ -104,6 +104,14 @@ spec:
             - name: KAJA_ACME_EMAIL
               value: {{ required "env.acmeEmail is required when env.autoHttps is true" .Values.env.acmeEmail | quote }}
             {{- end }}
+            {{- if .Values.env.gatewayEndpoint }}
+            - name: GATEWAY_ENDPOINT
+              value: {{ .Values.env.gatewayEndpoint | quote }}
+            {{- end }}
+            {{- if .Values.env.gatewayTLSInsecureSkipVerify }}
+            - name: GATEWAY_TLS_INSECURE_SKIP_VERIFY
+              value: "true"
+            {{- end }}
           livenessProbe:
             exec:
               command:

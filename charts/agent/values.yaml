@@ -67,6 +67,25 @@ env:
   autoHttps: false
   # Contact email for the Let's Encrypt account. Required when autoHttps is true.
   acmeEmail: ""
+  # Self-hosted gateway (docs/self-hosted-gateway) agent-plane address. Empty
+  # disables the gateway tunnel component entirely, leaving the private cluster
+  # unreachable — the gateway is the only inbound path (the Cloudflare tunnel
+  # has been removed). Defaults to this deployment's gateway; override
+  # per-install if you're running your own gateway elsewhere.
+  # NOTE: as of this writing gateway.kaja.dev resolves through Cloudflare's
+  # proxy, which doesn't forward arbitrary TCP ports (7000 included) — that
+  # DNS record needs to point directly (unproxied) at the gateway's node for
+  # this default to actually work. Don't fall back to a raw IP here even
+  # temporarily; fix the DNS record instead — IPs on this node can change.
+  gatewayEndpoint: "gateway.kaja.dev:7000"
+  # Skip verifying the gateway's cert on the agent-plane TLS handshake.
+  # Stays opt-in per-install rather than a chart default: the gateway
+  # currently self-signs its :7000 cert (TODO in helms/gateway/.values.yaml),
+  # so today every real install needs this set true to connect at all — but
+  # baking that into the chart's default would silently weaken TLS for any
+  # future install once a real cert is added there. Set true explicitly
+  # (e.g. via --set or your own .values.yaml) until that TODO is resolved.
+  gatewayTLSInsecureSkipVerify: false
 
 # Webhook configuration
 webhook:

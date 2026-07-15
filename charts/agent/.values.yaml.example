@@ -16,3 +16,8 @@ env:
   # gRPC endpoint of the Kaja platform
   portServerUrl: "grpc.your-domain.com:443"
   grpcUseTls: true
+
+  # Self-hosted gateway (docs/self-hosted-gateway) — required for this private cluster to be
+  # reachable at all; it is the only inbound path (the Cloudflare tunnel has been removed).
+  # This is the gateway's :7000 agent-plane address, e.g. gateway.your-domain.com:7000.
+  gatewayEndpoint: "gateway.your-domain.com:7000"
