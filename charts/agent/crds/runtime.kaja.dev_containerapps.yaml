@@ -316,6 +316,16 @@ spec:
                   - name
                   type: object
                 type: array
+              startCommand:
+                description: |-
+                  StartCommand overrides the process the container runs, as a single shell command
+                  (e.g. "npx serve dist -l $PORT"). Only the container's args are overridden — the
+                  image's own entrypoint is left untouched, so buildpack-built images still run through
+                  the CNB launcher (preserving its env/PATH setup) instead of bypassing it. Needed for
+                  buildpack-built images with no default process type (e.g. a Vite/static app with no
+                  Procfile or "start" script), which otherwise fail at launch with "determine start
+                  command: when there is no default process a command is required".
+                type: string
               startupProbe:
                 description: |-
                   StartupProbe indicates whether the container has started. If set, liveness and readiness

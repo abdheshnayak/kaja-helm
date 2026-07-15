@@ -37,6 +37,12 @@ mkdir -p "$HELM_REPO/charts"
 rm -rf "$HELM_REPO/charts/agent"
 cp -r helms/agent "$HELM_REPO/charts/agent"
 
+echo "Copying setup scripts (served via raw.githubusercontent to the console UI)..."
+mkdir -p "$HELM_REPO/scripts"
+cp -f "$KAJA_ROOT/scripts/install-agent.sh" "$HELM_REPO/scripts/"
+cp -f "$KAJA_ROOT/scripts/setup-k3s.sh" "$HELM_REPO/scripts/"
+cp -f "$KAJA_ROOT/scripts/setup-k3d.sh" "$HELM_REPO/scripts/"
+
 echo "Copying workflows and README..."
 mkdir -p "$HELM_REPO/.github/workflows"
 cp -f "$DOCS_HELM/.github/workflows/release-charts.yml" "$HELM_REPO/.github/workflows/"

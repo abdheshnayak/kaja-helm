@@ -80,6 +80,17 @@ spec:
                     additionalProperties:
                       type: string
                     type: object
+                  buildEnv:
+                    additionalProperties:
+                      type: string
+                    description: |-
+                      BuildEnv is passed as environment variables into the Cloud Native Buildpacks
+                      lifecycle at build time (the buildpack counterpart to BuildArgs, which only apply to
+                      the Dockerfile/Kaniko path). Paketo buildpacks read `BP_*` vars from the build
+                      environment during detect/build — e.g. BP_WEB_SERVER=nginx + BP_WEB_SERVER_ROOT=dist
+                      makes a static SPA build produce an nginx web process instead of an unrunnable image.
+                      Ignored by the Dockerfile/Kaniko path.
+                    type: object
                   cacheEnabled:
                     type: boolean
                   dockerfilePath:

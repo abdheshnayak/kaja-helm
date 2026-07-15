@@ -54,3 +54,4 @@ else
 fi
 
 echo "=== Done ==="
+echo "Verify with: kubectl get pods -n kaja"
