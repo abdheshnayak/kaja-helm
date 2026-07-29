@@ -80,6 +80,15 @@ spec:
           env:
             - name: AGENT_TOKEN
               value: {{ required "env.agentToken is required when installing the agent chart" .Values.env.agentToken | quote }}
+            # Self-identity so the agent can restart/update its own Deployment in-place
+            # (docs/agent-rollout). Deployment name is the chart fullname; namespace is
+            # the release namespace (or the downward-API pod namespace as a fallback).
+            - name: KAJA_AGENT_DEPLOYMENT
+              value: {{ include "agent.fullname" . | quote }}
+            - name: KAJA_AGENT_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
             {{- if .Values.env.agentId }}
             - name: AGENT_ID
               value: {{ .Values.env.agentId | quote }}
@@ -122,12 +131,15 @@ spec:
             periodSeconds: 10
             timeoutSeconds: 5
             failureThreshold: 3
+          # Readiness reflects real platform connectivity (/readyz returns 200 only after the
+          # agent logs in). This gates rolling self-updates: a new pod that can't reach the
+          # control plane never becomes Ready, so Kubernetes keeps the old pod serving instead
+          # of completing a broken update (docs/agent-rollout PHASE-4). Liveness stays a process
+          # check so a transient control-plane outage never restarts a healthy agent.
           readinessProbe:
-            exec:
-              command:
-                - pgrep
-                - -f
-                - "./operator-controller"
+            httpGet:
+              path: /readyz
+              port: 8081
             initialDelaySeconds: 5
             periodSeconds: 10
             timeoutSeconds: 5

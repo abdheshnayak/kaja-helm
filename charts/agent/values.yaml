@@ -10,7 +10,13 @@ replicaCount: 1
 
 image:
   repository: ghcr.io/abdheshnayak/kaja-agent
-  pullPolicy: Always
+  # IfNotPresent is correct for the production model: the chart pins an immutable
+  # semver tag (appVersion, e.g. v0.1.0) so there's nothing to re-pull for a given
+  # version, and rollout happens by moving to a new tag (helm upgrade, or the
+  # in-console one-click update in docs/agent-rollout PHASE-3).
+  # For LOCAL DEV against a mutable tag (e.g. develop), override in your
+  # gitignored .values.yaml with: image: { tag: develop, pullPolicy: Always }.
+  pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""
 

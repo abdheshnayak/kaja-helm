@@ -7,6 +7,13 @@
 #   # edit .values.yaml with your real values
 #   helm upgrade --install kaja-agent ./agent -f .values.yaml -n kaja
 
+# For LOCAL DEV against a mutable image tag (e.g. built with `task build:agent tag=develop`),
+# uncomment to always re-pull the moving tag. Production leaves these unset so the chart's
+# pinned immutable appVersion is used with IfNotPresent (see docs/agent-rollout).
+# image:
+#   tag: "develop"
+#   pullPolicy: Always
+
 env:
   # Agent token — obtain from the Kaja console under Settings > Clusters.
   # The platform resolves the cluster identity from this token; no clusterId needed.

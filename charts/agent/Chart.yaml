@@ -5,8 +5,13 @@ description: >
 
 type: application
 # Versions follow Semantic Versioning (https://semver.org/)
-version: 0.0.19
-appVersion: "develop"
+# version   = the chart's own version (bump on any chart change).
+# appVersion = the agent image tag this chart installs by default. It MUST be an
+#   immutable, published agent image tag (e.g. v0.1.0) — releases publish the
+#   image first, then bump this. Kept in lockstep with constants.RecommendedAgentVersion
+#   on the platform side. See docs/agent-rollout/RELEASE.md.
+version: 0.0.20
+appVersion: "v0.1.0"
 home: https://github.com/abdheshnayak/kaja
 sources:
   - https://github.com/abdheshnayak/kaja

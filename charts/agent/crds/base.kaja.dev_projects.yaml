@@ -67,6 +67,16 @@ spec:
               displayName:
                 description: DisplayName is a human-readable name for the resource
                 type: string
+              environment:
+                description: |-
+                  Environment marks which environment this project represents. Presentation only —
+                  nothing branches on it. See docs/project-duplicate/PHASE-4-environment.md.
+                enum:
+                - ;production
+                - staging
+                - development
+                - preview
+                type: string
               generatedNamespace:
                 description: |-
                   GeneratedNamespace is the actual namespace name generated for this project

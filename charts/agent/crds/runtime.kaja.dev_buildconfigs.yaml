@@ -138,7 +138,14 @@ spec:
                 - registry
                 type: object
               gitSource:
-                description: GitSource describes the repository to build from
+                description: |-
+                  GitSource describes the repository to build from.
+
+                  The bson tags here and on BuildGitSource are explicit and lowercase on purpose: the
+                  mongo driver lowercases untagged Go field names, so these documents have always been
+                  stored as `spec.gitsource.repourl`. Naming the keys freezes that (no migration) and
+                  stops anyone writing a query against the camelCase JSON name, which silently matches
+                  nothing — that bug disabled auto-deploy entirely. See buildconfig_bson_test.go.
                 properties:
                   authType:
                     type: string
