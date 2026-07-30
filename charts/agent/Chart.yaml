@@ -10,7 +10,7 @@ type: application
 #   immutable, published agent image tag (e.g. v0.1.0) — releases publish the
 #   image first, then bump this. Kept in lockstep with constants.RecommendedAgentVersion
 #   on the platform side. See docs/agent-rollout/RELEASE.md.
-version: 0.0.21
+version: 0.0.22
 appVersion: "v0.1.0"
 home: https://github.com/abdheshnayak/kaja
 sources:
