@@ -390,6 +390,14 @@ spec:
                 type: array
               message:
                 type: string
+              observedGeneration:
+                description: |-
+                  ObservedGeneration is the console desired-state version (kaja.dev/generation) that Phase
+                  and Reason describe. Without it a "Running" report cannot be attributed to a config, and
+                  the user-facing phase flaps between "Applying" and healthy right after a save.
+                  See docs/resource-lifecycle/PHASE-1-generation.md.
+                format: int64
+                type: integer
               phase:
                 description: |-
                   Phase is the derived, honest workload health phase (e.g. Running, Crashing, ImageError) computed
