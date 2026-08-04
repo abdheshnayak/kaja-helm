@@ -54,6 +54,19 @@ separate secret containing only valid environment-variable keys.
 `maxmemory` is set below the container memory limit on purpose: the server should evict (an
 observable, recoverable event) rather than be OOM-killed by the kernel.
 
+## Publishing
+
+Released by [`release-charts.yml`](../../.github/workflows/release-charts.yml) in the kaja repo:
+it syncs every chart in `helms/` to `abdheshnayak/kaja-helm` and tags it, and kaja-helm's Release
+workflow matrixes over `charts/*`, packaging each and pushing it to `oci://ghcr.io/abdheshnayak`
+plus a GitHub Release. All charts share one version (lockstep).
+
+The console pins `redisChartVersion` in `domain/plugins/catalog.go` — bump it in the same release,
+and never republish an existing version with different content.
+
+**One-time, after the first push:** make the `kaja-redis` GHCR package **public**. GHCR packages
+are private on creation, and agents pull anonymously.
+
 ## Local check
 
 ```bash

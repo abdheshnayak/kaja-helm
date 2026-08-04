@@ -38,18 +38,22 @@ data:
   entrypoint.sh: |
     #!/bin/sh
     # Assemble the runtime config from the read-only ConfigMap plus the password, which arrives
-    # as an env var and is appended to a tmpfs copy. Never pass it as a command-line flag: argv
-    # is world-readable through /proc inside the pod, and it lands in `kubectl describe`.
+    # as an env var. Never pass it as a command-line flag: argv is world-readable through /proc
+    # inside the pod, and it lands in `kubectl describe`.
     set -eu
 
     CONF=/tmp/redis.conf
-    cp /etc/kaja-redis/redis.conf "$CONF"
 
     if [ -z "${REDIS_PASSWORD:-}" ]; then
       echo "kaja-redis: REDIS_PASSWORD is empty; refusing to start an unauthenticated server" >&2
       exit 1
     fi
-    printf '\nrequirepass %s\n' "$REDIS_PASSWORD" >> "$CONF"
+
+    # Written with one redirect rather than `cp` + append. cp copies the *source's* mode, and
+    # the ConfigMap is mounted read-only (defaultMode 0555), so the copy landed as r-xr-xr-x and
+    # appending the password failed with "can't create /tmp/redis.conf: Permission denied" —
+    # before the server ever started. A fresh redirect creates the file under the process umask.
+    { cat /etc/kaja-redis/redis.conf; printf '\nrequirepass %s\n' "$REDIS_PASSWORD"; } > "$CONF"
     chmod 600 "$CONF"
 
     exec {{ .Values.binary.server }} "$CONF"
