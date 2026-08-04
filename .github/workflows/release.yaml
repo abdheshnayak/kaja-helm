@@ -1,5 +1,23 @@
 name: Release
 
+# One tag releases EVERY chart in charts/ at that version (lockstep versioning).
+#
+#   v0.0.23  ->  charts/agent @ 0.0.23  +  charts/kaja-redis @ 0.0.23
+#
+# The previous version hardcoded charts/agent at every step, so a second chart could never be
+# released — and tagging for one would have rewritten the *agent* chart's version and published
+# the agent under it.
+#
+# Lockstep means a chart can be republished byte-identical under a new version. That is the
+# accepted cost of having exactly one number to reason about, and it is safe here specifically
+# because this workflow stamps `version:` only. `appVersion:` (the agent image tag, which
+# constants.RecommendedAgentVersion tracks and the in-console agent rollout acts on) is left
+# alone, so a Redis-only release cannot advertise a phantom agent update.
+#
+# Tags are pushed by the kaja repo's release-charts.yml, which syncs the chart sources here
+# first. Publishing a version the console does not pin does nothing on its own — bump the pins
+# (constants.RecommendedAgentVersion, redisChartVersion) in the same release.
+
 on:
   push:
     tags:
@@ -10,20 +28,51 @@ permissions:
   packages: write
 
 jobs:
-  release:
+  # Discover charts from the tree rather than listing them here, so adding a chart to the repo
+  # is all it takes to have it released.
+  discover:
     runs-on: ubuntu-latest
+    outputs:
+      charts: ${{ steps.find.outputs.charts }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Find charts
+        id: find
+        run: |
+          set -euo pipefail
+          CHARTS=$(find charts -mindepth 1 -maxdepth 1 -type d -exec test -f '{}/Chart.yaml' \; -print \
+            | sort | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          if [ "$CHARTS" = "[]" ]; then
+            echo "::error::no charts found under charts/"
+            exit 1
+          fi
+          echo "charts=${CHARTS}" >> $GITHUB_OUTPUT
+          echo "Releasing: ${CHARTS}"
+
+  release:
+    needs: discover
+    runs-on: ubuntu-latest
+    strategy:
+      # Never leave a half-published release: if one chart fails, the others still publish and
+      # the failure is visible per-chart rather than hidden behind whichever ran first.
+      fail-fast: false
+      matrix:
+        chart: ${{ fromJson(needs.discover.outputs.charts) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Set chart version from tag
-        id: version
+      - name: Set version from tag
+        id: ver
+        run: echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Stamp chart version
+        # Block scalar: the sed expression contains ": ", which YAML cannot carry in a plain one.
         run: |
-          VERSION="${GITHUB_REF#refs/tags/v}"
-          echo "version=${VERSION}" >> $GITHUB_OUTPUT
-          sed -i "s/^version: .*/version: ${VERSION}/" charts/agent/Chart.yaml
+          sed -i "s/^version: .*/version: ${{ steps.ver.outputs.version }}/" "${{ matrix.chart }}/Chart.yaml"
 
       - name: Install Helm
         uses: azure/setup-helm@v4
@@ -31,13 +80,19 @@ jobs:
           version: 'v3.14.0'
 
       - name: Lint chart
-        run: helm lint charts/agent
+        # kaja-redis deliberately refuses to render without a credentials secret (the platform
+        # writes it before provisioning). Supply a placeholder; charts that ignore the value are
+        # unaffected.
+        run: helm lint "${{ matrix.chart }}" --set auth.existingSecret=ci-lint
 
       - name: Package chart
         id: package
         run: |
-          helm package charts/agent
-          echo "tarball=$(ls *.tgz)" >> $GITHUB_OUTPUT
+          set -euo pipefail
+          # Package into its own directory so the matrix legs cannot pick up each other's output.
+          mkdir -p dist
+          helm package "${{ matrix.chart }}" --destination dist
+          echo "tarball=$(ls dist/*.tgz)" >> $GITHUB_OUTPUT
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
@@ -47,6 +102,8 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Push chart to OCI (ghcr.io)
+        # NOTE: a package pushed to GHCR for the first time is PRIVATE. Make it public once, in
+        # the repo's Packages settings, or agents in customer clusters cannot pull it.
         run: helm push ${{ steps.package.outputs.tarball }} oci://ghcr.io/${{ github.repository_owner }}
 
       - name: Create Release and upload chart
