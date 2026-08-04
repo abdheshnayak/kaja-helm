@@ -1,0 +1,152 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "kaja-redis.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "kaja-redis.labels" . | nindent 4 }}
+spec:
+  # Single node. HA (Sentinel/Cluster) is deliberately out of scope: both change the connection
+  # shape clients must use, which breaks the one-URL promise the Connect tab makes.
+  # See docs/plugins/PHASE-5-redis.md, decision 4.
+  replicas: 1
+  serviceName: {{ include "kaja-redis.headlessName" . }}
+  selector:
+    matchLabels:
+      {{- include "kaja-redis.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "kaja-redis.labels" . | nindent 8 }}
+      annotations:
+        # Roll the pod when the rendered config changes (a maxmemory/policy edit is otherwise
+        # invisible to a running server, so a config save would appear to do nothing).
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- if .Values.metrics.enabled }}
+        prometheus.io/scrape: "true"
+        prometheus.io/port: {{ .Values.metrics.port | quote }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ include "kaja-redis.fullname" . }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: redis
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/bin/sh", "/etc/kaja-redis/entrypoint.sh"]
+          securityContext:
+            {{- toYaml .Values.containerSecurityContext | nindent 12 }}
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "kaja-redis.authSecret" . }}
+                  key: {{ .Values.auth.existingSecretKey }}
+            # redis-cli/valkey-cli read the password from this variable, so the probes below
+            # authenticate without putting the credential in argv.
+            - name: REDISCLI_AUTH
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "kaja-redis.authSecret" . }}
+                  key: {{ .Values.auth.existingSecretKey }}
+          ports:
+            - name: redis
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          # Readiness is a real PING round-trip, not a TCP accept: a server still loading an
+          # AOF/RDB from disk accepts connections but answers -LOADING, and routing traffic to
+          # it looks exactly like an outage to the app that just bound to it.
+          readinessProbe:
+            exec:
+              command: ["/bin/sh", "-c", "{{ .Values.binary.cli }} -p {{ .Values.service.port }} ping | grep -q PONG"]
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            tcpSocket:
+              port: redis
+            initialDelaySeconds: 20
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 5
+          # startupProbe gives a large durable dataset time to load without the liveness probe
+          # killing the pod mid-restore — the classic "big cache never comes back up" failure.
+          startupProbe:
+            exec:
+              command: ["/bin/sh", "-c", "{{ .Values.binary.cli }} -p {{ .Values.service.port }} ping | grep -q PONG"]
+            periodSeconds: 5
+            failureThreshold: 60
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: config
+              mountPath: /etc/kaja-redis
+              readOnly: true
+            - name: data
+              mountPath: /data
+            # readOnlyRootFilesystem is on, and the entrypoint writes the assembled config here.
+            - name: tmp
+              mountPath: /tmp
+        {{- if .Values.metrics.enabled }}
+        - name: metrics
+          image: "{{ .Values.metrics.image.repository }}:{{ .Values.metrics.image.tag }}"
+          imagePullPolicy: {{ .Values.metrics.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.containerSecurityContext | nindent 12 }}
+          env:
+            - name: REDIS_ADDR
+              value: "redis://127.0.0.1:{{ .Values.service.port }}"
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "kaja-redis.authSecret" . }}
+                  key: {{ .Values.auth.existingSecretKey }}
+          ports:
+            - name: metrics
+              containerPort: {{ .Values.metrics.port }}
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.metrics.resources | nindent 12 }}
+        {{- end }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "kaja-redis.fullname" . }}
+            defaultMode: 0555
+        - name: tmp
+          emptyDir: {}
+        {{- if not .Values.persistence.enabled }}
+        - name: data
+          emptyDir: {}
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+  {{- if .Values.persistence.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+        labels:
+          {{- include "kaja-redis.labels" . | nindent 10 }}
+      spec:
+        accessModes:
+          - {{ .Values.persistence.accessMode }}
+        resources:
+          requests:
+            storage: {{ .Values.persistence.size }}
+        {{- if .Values.persistence.storageClass }}
+        storageClassName: {{ .Values.persistence.storageClass }}
+        {{- end }}
+  {{- end }}

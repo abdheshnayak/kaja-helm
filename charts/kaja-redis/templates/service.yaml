@@ -1,0 +1,46 @@
+{{/*
+The stable ClusterIP Service apps connect to. Its name is the release name, which is what
+domain/plugins/catalog.go builds the connection secret's HOST from — keep the two in step.
+*/}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "kaja-redis.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "kaja-redis.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - name: redis
+      port: {{ .Values.service.port }}
+      targetPort: redis
+      protocol: TCP
+    {{- if .Values.metrics.enabled }}
+    - name: metrics
+      port: {{ .Values.metrics.port }}
+      targetPort: metrics
+      protocol: TCP
+    {{- end }}
+  selector:
+    {{- include "kaja-redis.selectorLabels" . | nindent 4 }}
+---
+{{/* Headless Service required by the StatefulSet for stable pod DNS. */}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "kaja-redis.headlessName" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "kaja-redis.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  clusterIP: None
+  publishNotReadyAddresses: true
+  ports:
+    - name: redis
+      port: {{ .Values.service.port }}
+      targetPort: redis
+      protocol: TCP
+  selector:
+    {{- include "kaja-redis.selectorLabels" . | nindent 4 }}

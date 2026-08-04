@@ -1,0 +1,92 @@
+# kaja-redis default values.
+#
+# Every value here is addressable as a flat `--set` scalar, because the console pushes
+# HelmApp.Spec.Values as map[string]string through strvals.ParseInto. Nothing in this chart
+# requires a multi-line YAML value (that limitation is what forced Fluent Bit and vmagent out
+# of their charts and into hand-pushed manifests — see domain/plugins/change_hook.go).
+
+image:
+  # Valkey is the BSD-3 Redis fork and the default here: Redis Inc.'s RSALv2/SSPL terms restrict
+  # offering the software as a managed service, which is close enough to what Kaja does to avoid.
+  # Valkey is wire- and command-compatible; switch to the upstream image with
+  #   image.repository=redis, image.tag=7-alpine, binary.server=redis-server, binary.cli=redis-cli
+  repository: valkey/valkey
+  tag: "8-alpine"
+  pullPolicy: IfNotPresent
+
+# Server/CLI binary names, so the image above can be swapped without editing templates.
+binary:
+  server: valkey-server
+  cli: valkey-cli
+
+auth:
+  # Name of an existing secret holding the password. Required — this chart never generates
+  # credentials, because the platform owns them (domain.InstallPlugin writes redis-auth-<instance>
+  # before provisioning, so the password lands only in-cluster and never in MongoDB).
+  existingSecret: ""
+  existingSecretKey: password
+
+service:
+  port: 6379
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: "1"
+    memory: 256Mi
+
+# Redis `maxmemory` and eviction policy. Kept slightly under the memory limit so the server
+# evicts before the kernel OOM-kills the container.
+maxmemory: 192mb
+maxmemoryPolicy: allkeys-lru
+
+# Durability. appendonly=yes needs persistence.enabled=true to survive a restart.
+appendonly: "no"
+appendfsync: everysec
+
+persistence:
+  enabled: false
+  size: 1Gi
+  storageClass: ""
+  accessMode: ReadWriteOnce
+
+# Prometheus exporter sidecar. Scraped by the Observability bundle's vmagent when a
+# metrics-backend capability is present in scope (domain/plugins/change_hook.go).
+metrics:
+  enabled: false
+  image:
+    repository: oliver006/redis_exporter
+    tag: v1.62.0
+    pullPolicy: IfNotPresent
+  port: 9121
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      cpu: 100m
+      memory: 64Mi
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+# Extra labels applied to every object (used by collectors to scope what they pick up).
+extraLabels: {}
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+terminationGracePeriodSeconds: 30

@@ -1,0 +1,55 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "kaja-redis.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "kaja-redis.labels" . | nindent 4 }}
+data:
+  redis.conf: |
+    bind 0.0.0.0
+    port {{ .Values.service.port }}
+    dir /data
+
+    # Memory ceiling and what to drop when it is hit. maxmemory sits under the container's
+    # memory limit so the server evicts (a recoverable, observable event) instead of being
+    # OOM-killed by the kernel (a restart that loses everything).
+    maxmemory {{ .Values.maxmemory }}
+    maxmemory-policy {{ .Values.maxmemoryPolicy }}
+
+    {{- if .Values.persistence.enabled }}
+    # Durable mode: RDB snapshots plus, optionally, the append-only log.
+    save 900 1
+    save 300 10
+    save 60 10000
+    {{- /* Normalise: YAML parses a bare `no` as boolean false, and a --set value arrives as a
+           string, so accept both spellings and always emit the yes/no Redis expects. */}}
+    appendonly {{ if has (toString .Values.appendonly) (list "yes" "true") }}yes{{ else }}no{{ end }}
+    appendfsync {{ .Values.appendfsync }}
+    {{- else }}
+    # Cache mode: no volume is attached, so snapshotting to the container filesystem would
+    # only burn IO and disk for data that cannot outlive the pod. Disable it outright.
+    save ""
+    appendonly no
+    {{- end }}
+
+    tcp-keepalive 300
+    timeout 0
+  entrypoint.sh: |
+    #!/bin/sh
+    # Assemble the runtime config from the read-only ConfigMap plus the password, which arrives
+    # as an env var and is appended to a tmpfs copy. Never pass it as a command-line flag: argv
+    # is world-readable through /proc inside the pod, and it lands in `kubectl describe`.
+    set -eu
+
+    CONF=/tmp/redis.conf
+    cp /etc/kaja-redis/redis.conf "$CONF"
+
+    if [ -z "${REDIS_PASSWORD:-}" ]; then
+      echo "kaja-redis: REDIS_PASSWORD is empty; refusing to start an unauthenticated server" >&2
+      exit 1
+    fi
+    printf '\nrequirepass %s\n' "$REDIS_PASSWORD" >> "$CONF"
+    chmod 600 "$CONF"
+
+    exec {{ .Values.binary.server }} "$CONF"

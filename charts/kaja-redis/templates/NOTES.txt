@@ -1,0 +1,12 @@
+{{ .Chart.Name }} {{ .Chart.Version }} installed as release "{{ .Release.Name }}".
+
+In-cluster address:
+  {{ include "kaja-redis.fullname" . }}.{{ .Release.Namespace }}.svc:{{ .Values.service.port }}
+
+Credentials come from the existing secret "{{ .Values.auth.existingSecret }}" (key
+"{{ .Values.auth.existingSecretKey }}") — this chart never generates them. Kaja writes that
+secret before provisioning, and publishes the app-facing copy separately as
+service-conn-{{ .Release.Name }}; bind an app to the service rather than copying values by hand.
+
+Mode: {{ if .Values.persistence.enabled }}durable ({{ .Values.persistence.size }} volume, appendonly {{ if has (toString .Values.appendonly) (list "yes" "true") }}on{{ else }}off{{ end }}){{ else }}cache (no volume — data does not survive a restart){{ end }}
+maxmemory: {{ .Values.maxmemory }} / policy {{ .Values.maxmemoryPolicy }}

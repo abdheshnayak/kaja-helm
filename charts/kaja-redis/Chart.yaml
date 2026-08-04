@@ -1,0 +1,24 @@
+apiVersion: v2
+name: kaja-redis
+description: >
+  Redis-compatible in-memory store provisioned by Kaja's managed-services catalog. Runs Valkey (the BSD-licensed Redis fork) by default; switch image.repository and binary.* to run the upstream Redis image instead.
+
+  Deliberately first-party rather than a third-party chart: Bitnami withdrew its public image catalog (the tags its redis chart pins now 404), and the console's Helm values pipeline passes flat `--set` scalars, which this chart's value shape is designed for. See docs/plugins/PHASE-5-redis.md.
+
+type: application
+# version   = the chart's own version (bump on any chart change).
+# appVersion = the default Valkey version this chart installs (values.yaml image.tag).
+version: 0.0.1
+appVersion: "8"
+home: https://github.com/abdheshnayak/kaja
+sources:
+  - https://github.com/abdheshnayak/kaja
+keywords:
+  - kaja
+  - redis
+  - valkey
+  - cache
+  - key-value
+maintainers:
+  - name: abdheshnayak
+    url: https://github.com/abdheshnayak
