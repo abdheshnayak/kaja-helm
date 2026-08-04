@@ -245,6 +245,14 @@ spec:
                     name:
                       description: Name is the secret name in the same namespace
                       type: string
+                    prefix:
+                      description: |-
+                        Prefix is prepended to every key when UseType is "env" (e.g. "REDIS_" turns URL into
+                        REDIS_URL). Without it, two managed services sharing the canonical key names
+                        (HOST/PORT/PASSWORD/URL) overwrite each other in the same envFrom set and the app silently
+                        talks to whichever one Kubernetes merged last. Empty means the keys are injected bare,
+                        which is what every binding made before this field existed did.
+                      type: string
                     useType:
                       description: UseType is "env" (inject keys as env vars) or "volume"
                         (mount as files)
