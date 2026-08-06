@@ -20,13 +20,16 @@ helm install kaja-agent ./agent --namespace kaja --create-namespace
 
 ### With Webhooks (Recommended for Production)
 
-1. **Install cert-manager** (one-time per cluster):
+1. **Install cert-manager** (one-time per cluster). Use the Helm chart — it is the same chart and
+   version the agent installs for itself when it finds cert-manager missing, so the two never
+   fight over the release:
 ```bash
-kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.13.3/cert-manager.yaml
-
-# Wait for cert-manager to be ready
-kubectl wait --for=condition=available --timeout=300s \
-  deployment/cert-manager -n cert-manager
+helm repo add jetstack https://charts.jetstack.io --force-update
+helm upgrade --install cert-manager jetstack/cert-manager \
+  --namespace cert-manager --create-namespace \
+  --version v1.14.0 \
+  --set installCRDs=true \
+  --wait
 ```
 
 2. **Install Kaja Agent**:
@@ -78,7 +81,7 @@ Note: CRDs in `crds/` are not upgraded by Helm (per [Helm CRD best practices](ht
 helm uninstall kaja-agent --namespace kaja
 
 # Optionally remove cert-manager (if no other apps use it)
-kubectl delete -f https://github.com/cert-manager/cert-manager/releases/download/v1.13.3/cert-manager.yaml
+helm uninstall cert-manager --namespace cert-manager
 ```
 
 ## Troubleshooting
@@ -108,7 +111,10 @@ kubectl get mutatingwebhookconfiguration operators-mutating-webhook-configuratio
 ### Cert-Manager Not Found
 If installation fails with cert-manager error, install it first:
 ```bash
-kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.13.3/cert-manager.yaml
+helm repo add jetstack https://charts.jetstack.io --force-update
+helm upgrade --install cert-manager jetstack/cert-manager \
+  --namespace cert-manager --create-namespace \
+  --version v1.14.0 --set installCRDs=true --wait
 ```
 
 ## Features

@@ -5,6 +5,11 @@
 # requires a multi-line YAML value (that limitation is what forced Fluent Bit and vmagent out
 # of their charts and into hand-pushed manifests — see domain/plugins/change_hook.go).
 
+# Pods to run: 1 normally, 0 when the platform has paused the service. Not a scaling knob — this
+# chart is single-node by design (see the StatefulSet), and anything above 1 would give you
+# independent servers that do not replicate.
+replicaCount: 1
+
 image:
   # Valkey is the BSD-3 Redis fork and the default here: Redis Inc.'s RSALv2/SSPL terms restrict
   # offering the software as a managed service, which is close enough to what Kaja does to avoid.
@@ -51,6 +56,16 @@ persistence:
   size: 1Gi
   storageClass: ""
   accessMode: ReadWriteOnce
+  # What happens to the volume when the StatefulSet is deleted. `helm uninstall` never deletes a
+  # volumeClaimTemplate PVC itself, so without this the cluster keeps a volume nobody is tracking
+  # and a same-named reinstall adopts a stranger's data. The platform also deletes the PVC
+  # explicitly on teardown (CleanupSpec in domain/plugins/catalog.go); this is the belt to that
+  # braces, and the only one that works when a release is removed outside Kaja.
+  # Kubernetes >= 1.27. Older clusters ignore the field, leaving the platform path in charge.
+  whenDeleted: Delete
+  # Scaling down is not a teardown — this chart is single-replica, but Retain is the answer that
+  # cannot lose data if that ever changes.
+  whenScaled: Retain
 
 # Prometheus exporter sidecar. Scraped by the Observability bundle's vmagent when a
 # metrics-backend capability is present in scope (domain/plugins/change_hook.go).

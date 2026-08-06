@@ -113,6 +113,18 @@ spec:
             - name: KAJA_ACME_EMAIL
               value: {{ required "env.acmeEmail is required when env.autoHttps is true" .Values.env.acmeEmail | quote }}
             {{- end }}
+            {{- /*
+              Outside the autoHttps block on purpose. The agent binary defaults KAJA_AUTO_HTTPS to
+              true when the variable is absent, and the ACME contact email usually arrives on the
+              Cluster CR rather than through this chart — so a cluster can be issuing certificates
+              with env.autoHttps never set here. Gating the directory on that flag would silently
+              drop it on exactly those installs, leaving them ordering against production while
+              the values file says staging.
+            */}}
+            {{- if .Values.env.acmeServer }}
+            - name: KAJA_ACME_SERVER
+              value: {{ .Values.env.acmeServer | quote }}
+            {{- end }}
             {{- if .Values.env.gatewayEndpoint }}
             - name: GATEWAY_ENDPOINT
               value: {{ .Values.env.gatewayEndpoint | quote }}

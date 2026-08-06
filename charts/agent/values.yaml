@@ -73,6 +73,17 @@ env:
   autoHttps: false
   # Contact email for the Let's Encrypt account. Required when autoHttps is true.
   acmeEmail: ""
+  # ACME directory the managed ClusterIssuer points at. Empty means Let's Encrypt production.
+  #
+  # Set this to staging before exercising a NEW issuance path for the first time:
+  #   https://acme-staging-v02.api.letsencrypt.org/directory
+  # Production counts failed orders against a per-registered-domain limit, and every generated
+  # Kaja hostname shares one registered domain — so a broken first attempt does not spend your
+  # budget, it spends everybody's. Staging speaks the same protocol with far looser limits.
+  #
+  # Staging certificates are NOT publicly trusted; browsers will warn. To go back, clear this and
+  # delete the certificate's TLS secret so cert-manager re-issues against production.
+  acmeServer: ""
   # Self-hosted gateway (docs/self-hosted-gateway) agent-plane address. Empty
   # disables the gateway tunnel component entirely, leaving the private cluster
   # unreachable — the gateway is the only inbound path (the Cloudflare tunnel
@@ -117,13 +128,26 @@ ingress:
           pathType: ImplementationSpecific
   tls: []
 
-resources: {}
-  # limits:
-  #   cpu: 500m
-  #   memory: 512Mi
-  # requests:
-  #   cpu: 100m
-  #   memory: 128Mi
+# Declared rather than left empty, which is what this used to be. With no requests the agent is
+# BestEffort QoS — the first thing the kubelet evicts under node pressure — and the agent is the
+# one workload whose death disconnects the whole cluster from the control plane. An unbounded
+# build job on the same node was enough to do it.
+#
+# Sized from measurement, not guesswork: the agent idles at ~3m CPU / 43Mi on a cluster of ~150
+# objects (see docs/cluster-resources). CPU is generous against its real usage because the agent
+# is I/O bound on watches and only spikes on reconnect storms and resyncs, where being throttled
+# is what turns a blip into a backlog.
+#
+# Memory is the one to raise on a large cluster. The manager's informer cache is cluster-wide and
+# unfiltered, so agent memory tracks total objects in the cluster rather than Kaja's own
+# footprint: budget 256Mi/1Gi past ~500 objects and 512Mi/2Gi past ~5,000.
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
 
 autoscaling:
   enabled: false

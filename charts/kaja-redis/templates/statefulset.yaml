@@ -6,10 +6,14 @@ metadata:
   labels:
     {{- include "kaja-redis.labels" . | nindent 4 }}
 spec:
-  # Single node. HA (Sentinel/Cluster) is deliberately out of scope: both change the connection
-  # shape clients must use, which breaks the one-URL promise the Connect tab makes.
+  # Single node, or zero. HA (Sentinel/Cluster) is deliberately out of scope: both change the
+  # connection shape clients must use, which breaks the one-URL promise the Connect tab makes.
   # See docs/plugins/PHASE-5-redis.md, decision 4.
-  replicas: 1
+  #
+  # The value exists only so the platform can pause the service by setting it to 0 — a stopped
+  # pod, a retained volume. It is not a scaling knob, and any value above 1 gives independent
+  # replicas that do not replicate, which is why the console never sets one.
+  replicas: {{ .Values.replicaCount }}
   serviceName: {{ include "kaja-redis.headlessName" . }}
   selector:
     matchLabels:
@@ -135,6 +139,9 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
   {{- if .Values.persistence.enabled }}
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: {{ .Values.persistence.whenDeleted | default "Delete" }}
+    whenScaled: {{ .Values.persistence.whenScaled | default "Retain" }}
   volumeClaimTemplates:
     - metadata:
         name: data

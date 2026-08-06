@@ -76,11 +76,73 @@ spec:
                       No omitempty on json so that "disabled: false" is always serialised; omitting
                       false would leave the old true value in place when copySpec replaces the spec.
                     type: boolean
+                  dns01:
+                    description: |-
+                      DNS01 configures ACME DNS-01 challenge solving, which is what makes wildcard certificates
+                      possible. Nil means HTTP-01 only — the behaviour before docs/dns/PHASE-5.
+                    properties:
+                      accounts:
+                        description: |-
+                          Accounts are the per-zone challenge credentials, one per zone this cluster may issue a
+                          wildcard for. They become the accounts JSON in a Secret cert-manager reads.
+                        items:
+                          description: |-
+                            ACMEDNSAccountSpec is one acme-dns credential, in the shape cert-manager's acmeDNS solver expects
+                            to find in its account Secret.
+                          properties:
+                            domain:
+                              description: |-
+                                Domain is the zone this account answers challenges for. It is the map key cert-manager looks
+                                the account up by: its solver indexes accounts by the challenge's DNS name, which for
+                                "*.acme.com" is "acme.com" — an ACME authorization identifier never contains the wildcard.
+                              type: string
+                            fullDomain:
+                              type: string
+                            password:
+                              type: string
+                            subdomain:
+                              type: string
+                            username:
+                              type: string
+                          required:
+                          - domain
+                          - fullDomain
+                          - password
+                          - subdomain
+                          - username
+                          type: object
+                        type: array
+                      apiUrl:
+                        description: APIURL is the acme-dns-compatible endpoint cert-manager
+                          posts challenge values to.
+                        type: string
+                      wildcardZones:
+                        description: |-
+                          WildcardZones are the zones a wildcard certificate should be issued for. Also the solver's
+                          dnsZones selector, so DNS-01 is used *only* for these names and every other host keeps
+                          taking the HTTP-01 path it takes today.
+                        items:
+                          type: string
+                        type: array
+                    type: object
                   preferredIssuer:
                     description: PreferredIssuer pins a specific ClusterIssuer name
                       (overrides auto-pick).
                     type: string
                 type: object
+              networkIsolation:
+                description: "NetworkIsolation controls whether the agent applies
+                  the per-project NetworkPolicy\nbaseline (docs/network-isolation).\n\n\toff
+                  \ — no policies are applied, and any previously applied baseline
+                  is removed.\n\tauto — apply the baseline to every project namespace
+                  on this cluster.\n\nDefaults to off. It stays opt-in until cross-project
+                  plugin bindings are wired through\n(plan Phase 3): enforcing before
+                  then would silently cut an app off from a database it\nis bound
+                  to in another project."
+                enum:
+                - "off"
+                - auto
+                type: string
               projectRef:
                 description: ProjectRef references the project this resource belongs
                   to
@@ -267,12 +329,51 @@ spec:
                   reason:
                     description: 'Reason: Reused | Created | Provided | None'
                     type: string
+                  wildcardCerts:
+                    description: |-
+                      WildcardCerts reports the shared wildcard certificates this cluster holds, and is how the
+                      route controller learns one exists. Routes and certificates are reconciled by different
+                      controllers, so the certificate's location and readiness have to travel between them
+                      somehow; the Cluster status is the channel the route controller already reads for its
+                      issuer and ingress class.
+                    items:
+                      description: WildcardCertStatus locates one wildcard certificate
+                        and says whether it can be used yet.
+                      properties:
+                        namespace:
+                          type: string
+                        ready:
+                          description: |-
+                            Ready is true only once the secret actually exists. Attaching a not-yet-issued secret to an
+                            Ingress does not fail — the ingress controller quietly falls back to its own default
+                            certificate, and every visitor gets a name-mismatch warning — so a route must wait for this
+                            rather than optimistically referencing the name.
+                          type: boolean
+                        secretName:
+                          description: SecretName and Namespace locate the TLS secret
+                            cert-manager wrote.
+                          type: string
+                        zone:
+                          description: Zone the certificate covers, e.g. "acme.com"
+                            for "*.acme.com" + "acme.com".
+                          type: string
+                      required:
+                      - namespace
+                      - secretName
+                      - zone
+                      type: object
+                    type: array
                 type: object
               message:
                 type: string
               network:
                 description: Network provides a summary of the cluster networking
                 properties:
+                  detectedCni:
+                    description: |-
+                      DetectedCNI is the container network plugin found on the cluster (e.g. "calico",
+                      "cilium", "flannel"). Empty when undetectable.
+                    type: string
                   detectedIngressController:
                     description: |-
                       DetectedIngressController is the name of the ingress controller found (e.g. "traefik", "ingress-nginx").
@@ -289,9 +390,38 @@ spec:
                     description: HasIngressController indicates if an ingress controller
                       is detected
                     type: boolean
+                  ingressControllerNamespaces:
+                    description: |-
+                      IngressControllerNamespaces lists every namespace an ingress controller was found in.
+                      Project NetworkPolicies allow ingress from these so Routes keep working; a hardcoded
+                      namespace would break Routes on clusters using traefik (the k3s default).
+                    items:
+                      type: string
+                    type: array
                   loadBalancerIps:
                     description: LoadBalancerIPs is the list of public IPs or hostnames
                       for the cluster
+                    items:
+                      type: string
+                    type: array
+                  networkPolicyEnforced:
+                    description: |-
+                      NetworkPolicyEnforced reports whether the detected CNI actually enforces NetworkPolicy.
+                      False means any policy we apply is a silent no-op, which must be surfaced honestly
+                      rather than presented as isolation.
+                    type: boolean
+                  networkPolicyEvidence:
+                    description: |-
+                      NetworkPolicyEvidence is what the detection matched on, in words. It carries the
+                      distinction a bool cannot: "we recognised flannel and it does not enforce" and "we did not
+                      recognise this cluster's CNI at all" both arrive as false, and they call for different
+                      actions from whoever reads them. "Your projects are not isolated" is also a claim a user is
+                      entitled to check rather than take.
+                    type: string
+                  nodeInternalIps:
+                    description: |-
+                      NodeInternalIPs lists the internal IPs of cluster nodes. Allowed as ingress in project
+                      NetworkPolicies so kubelet readiness/liveness probes survive a default-deny.
                     items:
                       type: string
                     type: array
