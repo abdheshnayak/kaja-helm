@@ -2,7 +2,7 @@
 # Install k3s + cert-manager + the Kaja agent on this machine. Idempotent — safe to re-run.
 #
 # Usage:
-#   curl -sfL https://raw.githubusercontent.com/abdheshnayak/kaja-helm/main/scripts/setup-k3s.sh \
+#   curl -sfL https://kaja.dev/install.sh \
 #     | sh -s -- <AGENT_TOKEN> <CHART_VERSION>
 #
 # POSIX sh only. The console hands this script to `sh`, and on Debian/Ubuntu /bin/sh is dash:

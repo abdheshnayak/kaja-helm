@@ -85,10 +85,18 @@ spec:
                         description: |-
                           Accounts are the per-zone challenge credentials, one per zone this cluster may issue a
                           wildcard for. They become the accounts JSON in a Secret cert-manager reads.
+
+                          Kept out of GraphQL entirely: a Cluster CR is readable through the API by anyone who can read
+                          the cluster, and these are credentials. They travel console → agent and nowhere else.
                         items:
                           description: |-
                             ACMEDNSAccountSpec is one acme-dns credential, in the shape cert-manager's acmeDNS solver expects
                             to find in its account Secret.
+
+                            The whole type is `graphql:"ignore"`d on the spec field above, because a Cluster CR is readable
+                            through the API by anyone who can read the cluster. These are credentials — narrow ones, able to
+                            publish a TXT record at exactly one name and nothing else, but credentials — and there is no
+                            reason for them to travel anywhere except console → agent.
                           properties:
                             domain:
                               description: |-

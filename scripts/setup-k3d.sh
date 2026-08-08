@@ -4,7 +4,7 @@
 # installs cert-manager, then installs the agent. Idempotent — safe to re-run.
 #
 # Usage:
-#   curl -sfL https://raw.githubusercontent.com/abdheshnayak/kaja-helm/main/scripts/setup-k3d.sh \
+#   curl -sfL https://kaja.dev/k3d.sh \
 #     | sh -s -- <AGENT_TOKEN> <CHART_VERSION> <CLUSTER_NAME>
 #
 # Args:

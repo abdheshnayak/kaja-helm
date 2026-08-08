@@ -3,7 +3,7 @@
 # Idempotent — safe to re-run (helm upgrade --install).
 #
 # Usage:
-#   curl -sfL https://raw.githubusercontent.com/abdheshnayak/kaja-helm/main/scripts/install-agent.sh \
+#   curl -sfL https://kaja.dev/agent.sh \
 #     | sh -s -- <AGENT_TOKEN> <CHART_VERSION>
 #
 # Args:
