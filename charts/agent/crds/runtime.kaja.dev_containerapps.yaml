@@ -106,7 +106,42 @@ spec:
                     name:
                       type: string
                     value:
+                      description: Value is a literal. Mutually exclusive with ValueFrom.
                       type: string
+                    valueFrom:
+                      description: |-
+                        ValueFrom reads the value from a secret key at pod start, so the credential is never
+                        stored in this spec (nor in Mongo, nor in any blueprint or duplicate of the project).
+                        Mutually exclusive with Value.
+                      properties:
+                        secretKeyRef:
+                          description: SecretKeySelector selects a key from a Secret
+                          properties:
+                            key:
+                              type: string
+                            name:
+                              type: string
+                          required:
+                          - key
+                          - name
+                          type: object
+                        serviceRef:
+                          description: ServiceKeySelector selects one published output
+                            of a managed service in the app's project.
+                          properties:
+                            key:
+                              description: Key is the output key the service publishes
+                                (e.g. DATABASE_URL, HOST).
+                              type: string
+                            service:
+                              description: Service is the plugin instance name, scoped
+                                to this app's project.
+                              type: string
+                          required:
+                          - key
+                          - service
+                          type: object
+                      type: object
                   required:
                   - name
                   type: object
@@ -278,7 +313,44 @@ spec:
                           name:
                             type: string
                           value:
+                            description: Value is a literal. Mutually exclusive with
+                              ValueFrom.
                             type: string
+                          valueFrom:
+                            description: |-
+                              ValueFrom reads the value from a secret key at pod start, so the credential is never
+                              stored in this spec (nor in Mongo, nor in any blueprint or duplicate of the project).
+                              Mutually exclusive with Value.
+                            properties:
+                              secretKeyRef:
+                                description: SecretKeySelector selects a key from
+                                  a Secret
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                - key
+                                - name
+                                type: object
+                              serviceRef:
+                                description: ServiceKeySelector selects one published
+                                  output of a managed service in the app's project.
+                                properties:
+                                  key:
+                                    description: Key is the output key the service
+                                      publishes (e.g. DATABASE_URL, HOST).
+                                    type: string
+                                  service:
+                                    description: Service is the plugin instance name,
+                                      scoped to this app's project.
+                                    type: string
+                                required:
+                                - key
+                                - service
+                                type: object
+                            type: object
                         required:
                         - name
                         type: object
