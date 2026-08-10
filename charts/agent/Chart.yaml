@@ -13,7 +13,7 @@ type: application
 #   image first, then bump this. Kept in lockstep with constants.RecommendedAgentVersion
 #   on the platform side. See docs/agent-rollout/RELEASE.md.
 version: 0.3.3
-appVersion: "v0.2.1"
+appVersion: "v0.2.4"
 
 home: https://github.com/abdheshnayak/kaja
 sources:
