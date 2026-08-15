@@ -6,7 +6,8 @@ Helm charts for [Kaja](https://kaja.dev) — deploy the Kaja agent and CRDs to c
 
 | Chart | Description |
 |-------|-------------|
-| [**agent**](charts/agent/) | Kaja agent and operator: runs in-cluster, syncs state to the console, and optionally serves validating/mutating webhooks. Includes CRDs for Environments, Clusters, Tunnels, Plugins, ContainerApps, HelmApps, Routes, and more. |
+| [**agent**](charts/agent/) | Kaja agent and operator: runs in-cluster, syncs state to the console, and optionally serves validating/mutating webhooks. Installs CRDs for Cluster, Project, Secret, ContainerApp, HelmApp, Route, BuildConfig and BuildRun. |
+| [**kaja-redis**](charts/kaja-redis/) | Redis-compatible in-memory store provisioned by Kaja's managed-services catalog. Runs [Valkey](https://valkey.io) by default. |
 
 ## Prerequisites
 
@@ -24,7 +25,6 @@ Install or upgrade from a [release](https://github.com/abdheshnayak/kaja-helm/re
 helm upgrade --install kaja-agent https://github.com/abdheshnayak/kaja-helm/releases/download/v0.0.1/kaja-agent-chart-0.0.1.tgz \
   --namespace kaja \
   --create-namespace \
-  --set env.clusterId=mycluster \
   --set env.agentToken="YOUR_AGENT_TOKEN"
 ```
 
@@ -37,7 +37,6 @@ helm upgrade --install kaja-agent oci://ghcr.io/abdheshnayak/kaja-agent-chart \
   --version 0.0.1 \
   --namespace kaja \
   --create-namespace \
-  --set env.clusterId=mycluster \
   --set env.agentToken="YOUR_AGENT_TOKEN"
 ```
 
@@ -58,7 +57,6 @@ Configure the agent (required for console connectivity):
 helm upgrade --install kaja-agent ./charts/agent \
   --namespace kaja \
   --create-namespace \
-  --set env.clusterId=mycluster \
   --set env.agentToken="YOUR_AGENT_TOKEN"
 ```
 
@@ -74,7 +72,6 @@ helm upgrade --install kaja-agent ./charts/agent \
   --namespace kaja \
   --create-namespace \
   --set webhook.enabled=true \
-  --set env.clusterId=mycluster \
   --set env.agentToken="YOUR_AGENT_TOKEN"
 ```
 
@@ -84,12 +81,16 @@ Key values for the agent chart:
 
 | Value | Description | Default |
 |-------|-------------|---------|
-| `env.clusterId` | Cluster identifier in the console | `mycluster` |
-| `env.agentToken` | Authentication token for the agent | `""` |
-| `env.portServerUrl` | gRPC port server URL (optional; default provided) | `""` |
+| `env.agentToken` | Agent authentication token — **required**, from the Kaja console. The platform resolves the cluster's identity from this token, so there is nothing else to name. | `""` |
+| `env.agentId` | Scopes resource names and namespaces. Set only when running more than one agent on the same cluster. | `""` |
+| `env.portServerUrl` | gRPC address of the Kaja platform | `grpc.server.kaja.dev:443` |
+| `env.grpcUseTls` | TLS for gRPC (false only for local dev / NodePort) | `true` |
 | `env.logLevel` | Log level | `info` |
+| `env.autoHttps` | Create a Let's Encrypt ClusterIssuer so routes get trusted certificates with no manual TLS secrets. Needs an ingress controller. | `false` |
+| `env.acmeEmail` | Contact email for the Let's Encrypt account. Required when `autoHttps` is true. | `""` |
+| `env.gatewayEndpoint` | Self-hosted gateway agent-plane address. Empty disables the tunnel, leaving a private cluster unreachable. | `gateway.kaja.dev:7000` |
 | `webhook.enabled` | Enable validating/mutating webhooks | `true` |
-| `webhook.webhookOnly` | Run only webhook server (no controllers) | `false` |
+| `webhook.webhookOnly` | Run only the webhook server (no controllers) | `false` |
 | `replicaCount` | Number of agent replicas | `1` |
 | `image.repository` | Agent image | `ghcr.io/abdheshnayak/kaja-agent` |
 | `image.tag` | Image tag | chart `appVersion` |
@@ -98,7 +99,7 @@ See [charts/agent/values.yaml](charts/agent/values.yaml) for all options.
 
 ## Documentation
 
-- **[Agent chart](charts/agent/README.md)** — Full install options, webhook setup, troubleshooting, and features (pause/resume environments, blueprints).
+- **[Agent chart](charts/agent/README.md)** — Full install options, webhook setup, troubleshooting, and pause/resume for projects.
 
 ## Upgrade and uninstall
 
@@ -124,3 +125,8 @@ Releases are built by GitHub Actions when you push a version tag.
    ```
 
 2. The workflow will set the chart version from the tag, lint and package the chart, push it to the [GitHub Container Registry](https://github.com/abdheshnayak/kaja-helm/pkgs/container/kaja-agent-chart) as `ghcr.io/<owner>/kaja-agent-chart`, and create a [GitHub Release](https://github.com/abdheshnayak/kaja-helm/releases) with `kaja-agent-chart-<version>.tgz` attached.
+
+## License
+
+[Apache License 2.0](LICENSE) © 2025 Kaja Contributors. See [NOTICE](NOTICE) for attribution
+terms.
