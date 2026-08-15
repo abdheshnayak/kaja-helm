@@ -106,6 +106,20 @@ spec:
               repository:
                 description: Repository specifies the Helm repository URL
                 type: string
+              upgradeCRDs:
+                description: |-
+                  UpgradeCRDs applies the chart's crds/ directory on upgrade, which Helm itself never does.
+
+                  Helm installs crds/ on first install and then leaves it alone forever, deliberately: a CRD
+                  replacement can break every object of that kind on the cluster, so the CLI makes it the
+                  operator's decision. That is the right default and the wrong one for a chart the *platform*
+                  installs and version-pins on the user's behalf — bumping such a chart would upgrade the
+                  controller and leave the CRDs it was written against behind, permanently.
+
+                  Off unless asked, and asked only by definitions whose operator ships CRDs that way (Percona's
+                  ps-operator does; CloudNativePG templates its CRDs, so a plain upgrade already carries them).
+                  See docs/databases/mysql-bake/README.md.
+                type: boolean
               values:
                 additionalProperties:
                   type: string

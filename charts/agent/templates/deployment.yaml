@@ -89,6 +89,30 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
+            {{- /*
+              The agent turns this into a Go soft memory limit (GOMEMLIMIT, applied at ~90% in
+              applyMemoryLimit) so the GC works harder as the heap approaches the ceiling rather
+              than ballooning through it on the startup informer sync and getting OOM-killed.
+
+              Gated on the limit actually being declared on purpose: the downward API reports
+              *node allocatable* for limits.memory when no limit is set, which would hand the
+              runtime a ceiling the size of the machine and quietly undo the whole point. The
+              nested `with` blocks are what make that gate safe — Go templates evaluate every
+              argument to `and`, so a single combined condition would nil-panic the render for
+              anyone who sets `resources: {}`.
+            */}}
+            {{- with .Values.resources }}
+            {{- with .limits }}
+            {{- if .memory }}
+            - name: KAJA_MEMORY_LIMIT_BYTES
+              valueFrom:
+                resourceFieldRef:
+                  containerName: {{ $.Chart.Name }}
+                  resource: limits.memory
+                  divisor: "1"
+            {{- end }}
+            {{- end }}
+            {{- end }}
             {{- if .Values.env.agentId }}
             - name: AGENT_ID
               value: {{ .Values.env.agentId | quote }}
