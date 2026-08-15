@@ -200,7 +200,7 @@ fi
 log "Installing Kaja Agent (v${CHART_VERSION})"
 install_agent() {
   helm upgrade --install kaja-agent \
-    "https://github.com/abdheshnayak/kaja-helm/releases/download/v${CHART_VERSION}/kaja-agent-chart-${CHART_VERSION}.tgz" \
+    "https://github.com/kaja-labs/kaja-helm/releases/download/v${CHART_VERSION}/kaja-agent-chart-${CHART_VERSION}.tgz" \
     --namespace kaja \
     --create-namespace \
     --set env.agentToken="${AGENT_TOKEN}"

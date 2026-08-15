@@ -15,9 +15,9 @@ type: application
 version: 0.3.3
 appVersion: "v0.2.4"
 
-home: https://github.com/abdheshnayak/kaja
+home: https://github.com/kaja-labs/kaja
 sources:
-  - https://github.com/abdheshnayak/kaja
+  - https://github.com/kaja-labs/kaja
 
 keywords:
   - kaja
