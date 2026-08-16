@@ -155,6 +155,19 @@ spec:
                 description: ProjectRef references the project this resource belongs
                   to
                 type: string
+              registryHost:
+                description: |-
+                  RegistryHost is the hostname the in-cluster registry serves, so the agent can mirror the
+                  wildcard certificate covering it into the registry's namespace.
+
+                  Carried from the console rather than derived here because the agent cannot work it out: the
+                  hostname is built from console-side state (the cluster's tunnel hostname or verified public
+                  domain), and a cluster holding a wildcard for its own zone *and* one for a customer's custom
+                  domain gives the agent two candidates with nothing to choose between them. The console has
+                  both the hostname and the certificate list, so the choice is made where the information is.
+
+                  Empty when no registry is installed.
+                type: string
             type: object
           status:
             description: ClusterStatus defines the observed state of Cluster
@@ -226,10 +239,8 @@ spec:
                 description: Events holds recent Warning events for the resource's
                   workload, collected best-effort. Optional.
                 items:
-                  description: |-
-                    EventInfo holds a recent Warning Kubernetes event related to the resource's workload
-                    (Deployment/ReplicaSet/Pod), collected best-effort. Powers a human-readable health reason
-                    and (later) an events feed. Optional.
+                  description: EventInfo holds recent Warning events for the resource's
+                    workload (best-effort).
                   properties:
                     count:
                       format: int32
@@ -438,6 +449,22 @@ spec:
                     items:
                       type: string
                     type: array
+                  registryClusterIp:
+                    description: |-
+                      RegistryClusterIP is the ClusterIP of the in-cluster registry's own Service.
+
+                      Reported so the registry's hostname can resolve to an address that is reachable from a node
+                      but routable from nowhere else. A node reaches ClusterIPs because kube-proxy programs the
+                      DNAT rules on the node itself — which is what lets containerd pull an image without the
+                      registry being exposed to the internet at all.
+
+                      The registry's Service, not the ingress controller's, and the difference is the point: an
+                      Ingress rule is served by the shared ingress listener, which on a public cluster answers on a
+                      public address for any Host header that matches. Pointing at the registry's own Service
+                      leaves no listener outside the cluster that can reach it.
+
+                      Empty until the registry is installed, which is why publication is level-triggered.
+                    type: string
                   serviceCidrs:
                     description: ServiceCIDRs is the list of CIDRs used for services
                     items:
@@ -521,27 +548,20 @@ spec:
                 - count
                 type: object
               observedGeneration:
-                description: |-
-                  ObservedGeneration is the console desired-state version (kaja.dev/generation) that Phase
-                  and Reason describe. Without it a "Running" report cannot be attributed to a config, and
-                  the user-facing phase flaps between "Applying" and healthy right after a save.
-                  See docs/resource-lifecycle/PHASE-1-generation.md.
+                description: ObservedGeneration is the console desired-state version
+                  (kaja.dev/generation) that Phase/Reason describe.
                 format: int64
                 type: integer
               phase:
-                description: |-
-                  Phase is the derived, honest workload health phase (e.g. Running, Crashing, ImageError) computed
-                  from the actual Deployment + pod state — the developer-facing headline. See DeriveWorkloadHealth.
-                  The apply-step Checks above remain secondary "apply progress" detail, not the headline.
+                description: Phase is the derived workload health (e.g., Running,
+                  Crashing, ImageError).
                 type: string
               pods:
                 description: Pods holds basic pod details for display (e.g. ContainerApp
                   overview). Optional.
                 items:
-                  description: |-
-                    PodInfo holds basic pod details for display (e.g. on ContainerApp/HelmApp overview).
-                    Used when a resource has associated pods (e.g. ContainerApp's deployment, Helm release pods).
-                    Reason and Message surface container waiting/terminated state for debugging (e.g. ImagePullBackOff).
+                  description: PodInfo holds basic pod details; Reason/Message surface
+                    container waiting/terminated state.
                   properties:
                     message:
                       type: string
@@ -564,16 +584,14 @@ spec:
                   type: object
                 type: array
               reason:
-                description: Reason is a plain-language explanation of Phase (e.g.
-                  "Couldn't pull your image.").
+                description: Reason is a plain-language explanation of Phase.
                 type: string
               services:
                 description: Services holds service details for the resource (e.g.
                   HelmApp release services) for domain/route backend selection. Optional.
                 items:
-                  description: |-
-                    ServiceInfo holds basic service details for display and for selecting domain backend (e.g. HelmApp domain).
-                    Used when a resource has associated services (e.g. Helm release services).
+                  description: ServiceInfo holds service details for display and domain
+                    backend selection.
                   properties:
                     name:
                       type: string

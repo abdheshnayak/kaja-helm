@@ -9,7 +9,7 @@
 replicaCount: 1
 
 image:
-  repository: ghcr.io/abdheshnayak/kaja-agent
+  repository: ghcr.io/kaja-labs/kaja-agent
   # IfNotPresent is correct for the production model: the chart pins an immutable
   # semver tag (appVersion, e.g. v0.1.0) so there's nothing to re-pull for a given
   # version, and rollout happens by moving to a new tag (helm upgrade, or the

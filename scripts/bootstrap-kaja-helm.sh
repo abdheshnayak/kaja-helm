@@ -29,7 +29,7 @@ fi
 
 if [ ! -d "$HELM_REPO" ]; then
   echo "Cloning kaja-helm into $HELM_REPO..."
-  git clone git@github.com:abdheshnayak/kaja-helm.git "$HELM_REPO"
+  git clone git@github.com:kaja-labs/kaja-helm.git "$HELM_REPO"
 fi
 
 echo "Copying agent chart to $HELM_REPO/charts/agent..."

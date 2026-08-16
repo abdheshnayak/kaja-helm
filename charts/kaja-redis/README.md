@@ -57,8 +57,8 @@ observable, recoverable event) rather than be OOM-killed by the kernel.
 ## Publishing
 
 Released by [`release-charts.yml`](../../.github/workflows/release-charts.yml) in the kaja repo:
-it syncs every chart in `helms/` to `abdheshnayak/kaja-helm` and tags it, and kaja-helm's Release
-workflow matrixes over `charts/*`, packaging each and pushing it to `oci://ghcr.io/abdheshnayak`
+it syncs every chart in `helms/` to `kaja-labs/kaja-helm` and tags it, and kaja-helm's Release
+workflow matrixes over `charts/*`, packaging each and pushing it to `oci://ghcr.io/kaja-labs`
 plus a GitHub Release. All charts share one version (lockstep).
 
 The console pins `redisChartVersion` in `domain/plugins/catalog.go` — bump it in the same release,
