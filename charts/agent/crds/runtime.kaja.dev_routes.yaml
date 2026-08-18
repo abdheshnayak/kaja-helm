@@ -149,6 +149,22 @@ spec:
                       type: string
                   type: object
                 type: array
+              setupLock:
+                description: SetupLock gates the route behind HTTP basic auth. Present
+                  means locked.
+                properties:
+                  realm:
+                    description: Realm is shown in the browser's credential prompt.
+                    type: string
+                  secretName:
+                    description: |-
+                      SecretName names a Secret in the Ingress namespace holding htpasswd credentials.
+                      It carries the same content under two keys because the two ingress controllers
+                      disagree on the name: "auth" for ingress-nginx, "users" for traefik.
+                    type: string
+                required:
+                - secretName
+                type: object
               tls:
                 description: TLS specifies the TLS configuration for the route
                 properties:

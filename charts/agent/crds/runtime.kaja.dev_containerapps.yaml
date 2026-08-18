@@ -113,7 +113,7 @@ spec:
                     valueFrom:
                       description: |-
                         ValueFrom reads the value from a secret key at pod start, so the credential is never
-                        stored in this spec (nor in Mongo, nor in any blueprint or duplicate of the project).
+                        stored in this spec (nor in Mongo, nor in any template or duplicate of the project).
                         Mutually exclusive with Value.
                       properties:
                         secretKeyRef:
@@ -377,7 +377,7 @@ spec:
                           valueFrom:
                             description: |-
                               ValueFrom reads the value from a secret key at pod start, so the credential is never
-                              stored in this spec (nor in Mongo, nor in any blueprint or duplicate of the project).
+                              stored in this spec (nor in Mongo, nor in any template or duplicate of the project).
                               Mutually exclusive with Value.
                             properties:
                               secretKeyRef:
@@ -549,6 +549,41 @@ spec:
                     format: int32
                     type: integer
                 type: object
+              volumes:
+                description: |-
+                  Volumes are persistent disks mounted into the main container, one PersistentVolumeClaim
+                  each. An app that declares any is pinned to a single replica and deployed with the
+                  Recreate strategy, because a ReadWriteOnce claim binds to one node and cannot be held by
+                  the old and new pods at once.
+                items:
+                  description: ContainerAppVolume is one persistent disk mounted into
+                    the app.
+                  properties:
+                    mountPath:
+                      description: MountPath is the absolute path the volume is mounted
+                        at inside the main container.
+                      type: string
+                    name:
+                      description: |-
+                        Name identifies the volume and names its claim, so renaming one detaches the old disk
+                        and provisions an empty replacement rather than moving the data.
+                      type: string
+                    size:
+                      description: |-
+                        Size is the requested capacity as a Kubernetes quantity, e.g. "10Gi". It can be grown
+                        later only if the storage class allows expansion, and can never be reduced.
+                      type: string
+                    storageClass:
+                      description: |-
+                        StorageClass names the class to claim from. Empty uses the cluster default, and is
+                        immutable once the claim exists.
+                      type: string
+                  required:
+                  - mountPath
+                  - name
+                  - size
+                  type: object
+                type: array
             required:
             - image
             type: object
