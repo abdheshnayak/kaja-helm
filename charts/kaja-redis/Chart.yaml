@@ -13,7 +13,7 @@ type: application
 
 # version   = the chart's own version (bump on any chart change).
 # appVersion = the default Valkey version this chart installs (values.yaml image.tag).
-version: 0.3.15
+version: 0.3.16
 appVersion: "8"
 
 home: https://github.com/kaja-labs/kaja
