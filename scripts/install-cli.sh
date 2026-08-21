@@ -139,5 +139,9 @@ case ":${PATH}:" in
   *) echo "Note: ${INSTALL_DIR} is not on your PATH." >&2 ;;
 esac
 
+# Deliberately printed, not run. Under `curl | sh` stdin is this script, so a
+# prompt would read EOF and the wizard would collapse on its first question —
+# and springing an interactive setup that asks for sudo on someone who has not
+# yet decided to trust us is worse than one more keystroke.
 echo
-echo "Next: kaja auth login"
+echo "Next: kaja init"

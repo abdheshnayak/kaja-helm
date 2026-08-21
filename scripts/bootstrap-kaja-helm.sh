@@ -37,11 +37,12 @@ mkdir -p "$HELM_REPO/charts"
 rm -rf "$HELM_REPO/charts/agent"
 cp -r helms/agent "$HELM_REPO/charts/agent"
 
-echo "Copying setup scripts (served via raw.githubusercontent to the console UI)..."
+# Only the CLI installer now. The cluster and agent scripts were removed when the
+# CLI took over both halves of connecting a cluster — it registers and installs
+# in one process, so there is no token to paste between them.
+echo "Copying the CLI installer (served via raw.githubusercontent as kaja.dev/cli.sh)..."
 mkdir -p "$HELM_REPO/scripts"
-cp -f "$KAJA_ROOT/scripts/install-agent.sh" "$HELM_REPO/scripts/"
-cp -f "$KAJA_ROOT/scripts/setup-k3s.sh" "$HELM_REPO/scripts/"
-cp -f "$KAJA_ROOT/scripts/setup-k3d.sh" "$HELM_REPO/scripts/"
+cp -f "$KAJA_ROOT/scripts/install-cli.sh" "$HELM_REPO/scripts/"
 
 echo "Copying workflows and README..."
 mkdir -p "$HELM_REPO/.github/workflows"
