@@ -1,0 +1,114 @@
+# kaja-rabbitmq default values.
+#
+# Every value here is addressable as a flat `--set` scalar, because the console pushes
+# HelmApp.Spec.Values as map[string]string through strvals.ParseInto. Nothing in this chart
+# requires a multi-line YAML value.
+
+# Pods to run: 1 normally, 0 when the platform has paused the service. Not a scaling knob — this
+# chart is single-node by design (see the StatefulSet), and a second replica would be a separate
+# broker with its own queues rather than a cluster member.
+replicaCount: 1
+
+image:
+  # The Docker official image. RabbitMQ itself is MPL-2.0, which unlike SSPL/BSL puts no
+  # restriction on running it as a service — the reason this card exists rather than a Kafka one.
+  # The `-management` variant carries the web UI and the Prometheus endpoint; both are plugins,
+  # and the plain image has neither.
+  repository: rabbitmq
+  tag: "4.1-management-alpine"
+  pullPolicy: IfNotPresent
+
+auth:
+  # Name of an existing secret holding the password. Required — this chart never generates
+  # credentials, because the platform owns them (domain.InstallPlugin writes
+  # rabbitmq-auth-<instance> before provisioning, so the password lands only in-cluster and
+  # never in MongoDB).
+  existingSecret: ""
+  existingSecretKey: password
+  username: kaja
+  # The virtual host created on first boot and named in the connection URL. "/" is RabbitMQ's
+  # own default and the one every client assumes when a URL carries no path.
+  vhost: "/"
+
+service:
+  amqpPort: 5672
+  # The management UI. Reachable in-cluster on this port; published to the internet only if
+  # someone adds a domain to the service (ExposeSpec in domain/plugins/catalog.go).
+  managementPort: 15672
+  # rabbitmq_prometheus. Scraped by the Observability bundle's vmagent when a metrics-backend
+  # capability is present in scope (domain/plugins/change_hook.go).
+  metricsPort: 15692
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 512Mi
+  limits:
+    cpu: "1"
+    memory: 512Mi
+
+# What RabbitMQ believes the machine has, in bytes, and the share of it the broker may use before
+# it blocks publishers.
+#
+# Both are needed and neither is optional. Left alone, RabbitMQ reads the *node's* total memory
+# through /proc, so a 512Mi container on a 64Gi node computes its watermark from 64Gi, never
+# throttles, and is OOM-killed by the kernel — which loses the connection state a flow-control
+# pause exists to protect. Keep totalMemoryOverride equal to resources.limits.memory.
+totalMemoryOverride: "536870912"
+memoryHighWatermark: "0.6"
+
+# Free disk below which RabbitMQ blocks publishers. Absolute rather than RabbitMQ's default
+# relative-to-RAM rule: volumes here are sized by the user and unrelated to the memory limit, so a
+# ratio would pick a floor no one chose.
+diskFreeLimit: 200MB
+
+persistence:
+  # Not optional, unlike Redis's. A broker exists to not lose messages, so there is no
+  # emptyDir mode: the mnesia directory under /var/lib/rabbitmq holds the queues, the durable
+  # exchanges and the node's own identity.
+  size: 4Gi
+  storageClass: ""
+  accessMode: ReadWriteOnce
+  # `helm uninstall` never deletes a volumeClaimTemplate PVC itself, so without this the cluster
+  # keeps a volume nobody is tracking and a same-named reinstall adopts a stranger's messages.
+  # The platform also deletes the PVC explicitly on teardown (StorageSpec in
+  # domain/plugins/catalog.go); this is the belt to that braces, and the only one that works when
+  # a release is removed outside Kaja. Kubernetes >= 1.27; older clusters ignore the field.
+  whenDeleted: Delete
+  whenScaled: Retain
+
+# Log to stdout only. The file logger would write into the data volume, filling the disk the
+# broker blocks publishers over, and the platform reads logs from the container anyway.
+logLevel: info
+
+podSecurityContext:
+  runAsNonRoot: true
+  # The uid/gid the official image's `rabbitmq` user has. fsGroup so the mounted volume is
+  # writable by it — RabbitMQ refuses to start on a mnesia directory it cannot write.
+  runAsUser: 999
+  runAsGroup: 999
+  fsGroup: 999
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  # Deliberately NOT read-only, and the exception in this chart set.
+  #
+  # The official image's entrypoint writes its own generated config into /etc/rabbitmq/conf.d
+  # before the broker starts, so a read-only root filesystem stops the container in its
+  # entrypoint. Every other hardening below still applies. Turning it on means replacing the
+  # image's entrypoint, which is not a change worth making without a cluster to prove it on.
+  readOnlyRootFilesystem: false
+  capabilities:
+    drop:
+      - ALL
+
+# Extra labels applied to every object (used by collectors to scope what they pick up).
+extraLabels: {}
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+# Erlang stops accepting new work immediately but takes time to flush queue indices to disk.
+# Below ~30s a shutdown under load can leave the mnesia directory needing recovery on restart.
+terminationGracePeriodSeconds: 60

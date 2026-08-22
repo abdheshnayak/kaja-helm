@@ -1,0 +1,32 @@
+apiVersion: v2
+name: kaja-rabbitmq
+description: >
+  RabbitMQ message broker provisioned by Kaja's managed-services catalog. Single node,
+  durable by design, with the management UI and the Prometheus endpoint enabled.
+
+  Deliberately first-party rather than a third-party chart, for two reasons. Bitnami
+  withdrew its public catalog, so its rabbitmq chart's pinned tags now 404; and RabbitMQ's
+  own cluster-operator ships only a raw manifest (no chart at all), which the console's
+  Helm pipeline cannot install. That pipeline also passes flat `--set` scalars, which this
+  chart's value shape is designed for.
+type: application
+
+# version   = the chart's own version (bump on any chart change).
+# appVersion = the default RabbitMQ series this chart installs (values.yaml image.tag).
+version: 0.3.20
+appVersion: "4.1"
+
+home: https://github.com/kaja-labs/kaja
+sources:
+  - https://github.com/kaja-labs/kaja
+
+keywords:
+  - kaja
+  - rabbitmq
+  - amqp
+  - queue
+  - messaging
+
+maintainers:
+  - name: abdheshnayak
+    url: https://github.com/kaja-labs

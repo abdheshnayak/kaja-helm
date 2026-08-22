@@ -1,0 +1,148 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "kaja-rabbitmq.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "kaja-rabbitmq.labels" . | nindent 4 }}
+spec:
+  # Single node, or zero. Clustering is deliberately out of scope: it needs peer discovery, a
+  # shared Erlang cookie and quorum queues, and it changes what a client must connect to — the
+  # one-URL promise the Connect tab makes. A second replica here would be a second broker with
+  # its own queues, which is worse than not offering the knob.
+  #
+  # The value exists so the platform can pause the service by setting it to 0: a stopped pod, a
+  # retained volume.
+  replicas: {{ .Values.replicaCount }}
+  serviceName: {{ include "kaja-rabbitmq.headlessName" . }}
+  selector:
+    matchLabels:
+      {{- include "kaja-rabbitmq.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "kaja-rabbitmq.labels" . | nindent 8 }}
+      annotations:
+        # Roll the pod when the rendered config changes. RabbitMQ reads conf.d once at boot, so
+        # without this a memory-watermark edit would report success and change nothing.
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        prometheus.io/scrape: "true"
+        prometheus.io/port: {{ .Values.service.metricsPort | quote }}
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: {{ include "kaja-rabbitmq.fullname" . }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: rabbitmq
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.containerSecurityContext | nindent 12 }}
+          env:
+            # Read on first boot only — the image writes them into 10-defaults.conf, and once
+            # the mnesia directory exists RabbitMQ has its own user table and ignores these.
+            # So rotating the secret does NOT rotate the broker's password; that would need
+            # rabbitmqctl against the running node.
+            - name: RABBITMQ_DEFAULT_USER
+              value: {{ .Values.auth.username | quote }}
+            - name: RABBITMQ_DEFAULT_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "kaja-rabbitmq.authSecret" . }}
+                  key: {{ .Values.auth.existingSecretKey }}
+            - name: RABBITMQ_DEFAULT_VHOST
+              value: {{ .Values.auth.vhost | quote }}
+            # RABBITMQ_NODENAME is deliberately unset. The node's identity names its directory
+            # under /var/lib/rabbitmq/mnesia, and a node that returns under a different name
+            # finds an empty database beside the old one — every queue appears to have vanished.
+            # The image's default is rabbit@$HOSTNAME, and a StatefulSet pod's hostname is fixed
+            # for the life of the service, so the default is already the stable answer. Setting
+            # an FQDN instead would also make boot depend on the pod resolving its own name.
+          ports:
+            - name: amqp
+              containerPort: {{ .Values.service.amqpPort }}
+              protocol: TCP
+            - name: management
+              containerPort: {{ .Values.service.managementPort }}
+              protocol: TCP
+            - name: metrics
+              containerPort: {{ .Values.service.metricsPort }}
+              protocol: TCP
+          # Readiness asks the broker whether it is listening for clients, not whether the port
+          # accepts a connection: an Erlang node still recovering queue indices holds the socket
+          # open and refuses every AMQP handshake, which to a just-bound app is an outage.
+          readinessProbe:
+            exec:
+              command: ["rabbitmq-diagnostics", "-q", "check_port_connectivity"]
+            initialDelaySeconds: 10
+            periodSeconds: 15
+            # Each probe starts a short-lived Erlang VM to ask the running one, which is slow —
+            # a one-second timeout fails a healthy broker.
+            timeoutSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            exec:
+              command: ["rabbitmq-diagnostics", "-q", "ping"]
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 15
+            failureThreshold: 5
+          # A broker with a large backlog rebuilds its indices before it serves anything. The
+          # startup probe gives that time without the liveness probe killing the pod mid-recovery
+          # — the classic "full queue never comes back up" failure.
+          startupProbe:
+            exec:
+              command: ["rabbitmq-diagnostics", "-q", "ping"]
+            periodSeconds: 10
+            timeoutSeconds: 10
+            failureThreshold: 60
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            # subPath rather than a directory mount: /etc/rabbitmq/conf.d also receives the
+            # image entrypoint's own 10-defaults.conf, and mounting the directory would hide it.
+            - name: config
+              mountPath: /etc/rabbitmq/conf.d/20-kaja.conf
+              subPath: 20-kaja.conf
+              readOnly: true
+            - name: config
+              mountPath: /etc/rabbitmq/enabled_plugins
+              subPath: enabled_plugins
+              readOnly: true
+            - name: data
+              mountPath: /var/lib/rabbitmq
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "kaja-rabbitmq.fullname" . }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: {{ .Values.persistence.whenDeleted | default "Delete" }}
+    whenScaled: {{ .Values.persistence.whenScaled | default "Retain" }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+        labels:
+          {{- include "kaja-rabbitmq.labels" . | nindent 10 }}
+      spec:
+        accessModes:
+          - {{ .Values.persistence.accessMode }}
+        resources:
+          requests:
+            storage: {{ .Values.persistence.size }}
+        {{- if .Values.persistence.storageClass }}
+        storageClassName: {{ .Values.persistence.storageClass }}
+        {{- end }}

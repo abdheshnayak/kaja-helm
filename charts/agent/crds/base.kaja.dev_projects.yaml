@@ -72,7 +72,8 @@ spec:
                   Environment marks which environment this project represents. Presentation only —
                   nothing branches on it. See docs/project-duplicate/PHASE-4-environment.md.
                 enum:
-                - ;production
+                - ""
+                - production
                 - staging
                 - development
                 - preview

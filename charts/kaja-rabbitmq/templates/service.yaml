@@ -1,0 +1,65 @@
+{{/*
+The stable ClusterIP Service apps connect to. Its name is the release name, which is what
+domain/plugins/catalog.go builds the connection secret's HOST from — keep the two in step.
+
+AMQP only. The management UI gets its own Service below so that publishing the dashboard to a
+domain cannot put the broker's client port on the internet alongside it.
+*/}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "kaja-rabbitmq.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "kaja-rabbitmq.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - name: amqp
+      port: {{ .Values.service.amqpPort }}
+      targetPort: amqp
+      protocol: TCP
+    - name: metrics
+      port: {{ .Values.service.metricsPort }}
+      targetPort: metrics
+      protocol: TCP
+  selector:
+    {{- include "kaja-rabbitmq.selectorLabels" . | nindent 4 }}
+---
+{{/* The management UI, named by ExposeSpec.ServiceNameTmpl in domain/plugins/catalog.go. */}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "kaja-rabbitmq.managementName" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "kaja-rabbitmq.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - name: management
+      port: {{ .Values.service.managementPort }}
+      targetPort: management
+      protocol: TCP
+  selector:
+    {{- include "kaja-rabbitmq.selectorLabels" . | nindent 4 }}
+---
+{{/* Headless Service required by the StatefulSet for stable pod DNS. */}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "kaja-rabbitmq.headlessName" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "kaja-rabbitmq.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  clusterIP: None
+  publishNotReadyAddresses: true
+  ports:
+    - name: amqp
+      port: {{ .Values.service.amqpPort }}
+      targetPort: amqp
+      protocol: TCP
+  selector:
+    {{- include "kaja-rabbitmq.selectorLabels" . | nindent 4 }}

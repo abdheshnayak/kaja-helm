@@ -1,0 +1,16 @@
+{{ .Chart.Name }} {{ .Chart.Version }} installed as release "{{ .Release.Name }}".
+
+In-cluster addresses:
+  AMQP        {{ include "kaja-rabbitmq.fullname" . }}.{{ .Release.Namespace }}.svc:{{ .Values.service.amqpPort }}
+  Management  {{ include "kaja-rabbitmq.managementName" . }}.{{ .Release.Namespace }}.svc:{{ .Values.service.managementPort }}
+  Metrics     {{ include "kaja-rabbitmq.fullname" . }}.{{ .Release.Namespace }}.svc:{{ .Values.service.metricsPort }}/metrics
+
+Credentials come from the existing secret "{{ .Values.auth.existingSecret }}" (key
+"{{ .Values.auth.existingSecretKey }}") — this chart never generates them. Kaja writes that
+secret before provisioning, and publishes the app-facing copy separately as
+service-conn-{{ .Release.Name }}; bind an app to the service rather than copying values by hand.
+
+The user and password are applied on first boot only. Changing the secret afterwards does not
+change what the broker accepts — RabbitMQ owns its user table once the data directory exists.
+
+Storage: {{ .Values.persistence.size }}{{ if .Values.persistence.storageClass }} on {{ .Values.persistence.storageClass }}{{ end }}

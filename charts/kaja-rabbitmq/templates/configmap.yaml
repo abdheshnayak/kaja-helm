@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "kaja-rabbitmq.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "kaja-rabbitmq.labels" . | nindent 4 }}
+data:
+  # Mounted as /etc/rabbitmq/conf.d/20-kaja.conf. The number matters: the image's entrypoint
+  # writes 10-defaults.conf, and RabbitMQ reads conf.d in lexical order with later files winning,
+  # so anything set here overrides the image's defaults rather than being overridden by them.
+  20-kaja.conf: |
+    # Bind on all interfaces; the Services in front of this decide who can reach it.
+    listeners.tcp.default = {{ .Values.service.amqpPort }}
+    management.tcp.port = {{ .Values.service.managementPort }}
+    prometheus.tcp.port = {{ .Values.service.metricsPort }}
+
+    # What the broker believes it has to work with. Without the override RabbitMQ reads the
+    # node's total memory, not the container's limit — see values.yaml.
+    total_memory_available_override_value = {{ .Values.totalMemoryOverride }}
+    vm_memory_high_watermark.relative = {{ .Values.memoryHighWatermark }}
+    disk_free_limit.absolute = {{ .Values.diskFreeLimit }}
+
+    log.console = true
+    log.console.level = {{ .Values.logLevel }}
+    # Off explicitly: the file logger's default path is inside the data volume, so leaving it on
+    # spends the user's disk on logs and then blocks publishers when disk_free_limit is hit.
+    log.file = false
+
+    # The default user is created on first boot only, from the env the StatefulSet passes. Said
+    # here so the loopback restriction that protects `guest` cannot be inherited by it: a user
+    # that can only connect from localhost is unreachable from another pod, which is every app.
+    loopback_users = none
+  enabled_plugins: |
+    [rabbitmq_management,rabbitmq_prometheus].
