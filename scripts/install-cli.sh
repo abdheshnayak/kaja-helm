@@ -3,6 +3,7 @@
 #
 # Usage:
 #   curl -sfL https://kaja.dev/cli.sh | sh
+#   curl -sfL https://kaja.dev/cli.sh | sh -s -- --init        # then run `kaja init`
 #   curl -sfL https://kaja.dev/cli.sh | sh -s -- v0.1.0        # pin a version
 #   curl -sfL https://kaja.dev/cli.sh | KAJA_INSTALL_DIR=~/bin sh
 #
@@ -14,8 +15,9 @@ set -eu
 # and a release on it cannot be downloaded anonymously. Releases are tagged `cli/vX.Y.Z`
 # there, alongside the chart releases tagged `vX.Y.Z`.
 REPO="${KAJA_CLI_REPO:-kaja-labs/kaja-helm}"
-VERSION="${1:-${KAJA_CLI_VERSION:-}}"
 INSTALL_DIR="${KAJA_INSTALL_DIR:-/usr/local/bin}"
+VERSION="${KAJA_CLI_VERSION:-}"
+INIT="${KAJA_INIT:-}"
 
 log() { echo "=== $* ==="; }
 err() { echo "Error: $*" >&2; }
@@ -26,6 +28,24 @@ need() {
 
 need curl
 need tar
+
+# --- arguments ---------------------------------------------------------------
+
+# A bare argument is still a version, because `| sh -s -- v0.1.0` is documented
+# and has been in use since the first release.
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --init) INIT=1 ;;
+    --version)
+      [ "$#" -ge 2 ] || { err "--version needs a version, e.g. --version v0.1.0"; exit 1; }
+      VERSION="$2"
+      shift
+      ;;
+    -*) err "unknown option: $1"; exit 1 ;;
+    *) VERSION="$1" ;;
+  esac
+  shift
+done
 
 # --- platform ----------------------------------------------------------------
 
@@ -139,9 +159,32 @@ case ":${PATH}:" in
   *) echo "Note: ${INSTALL_DIR} is not on your PATH." >&2 ;;
 esac
 
-# Deliberately printed, not run. Under `curl | sh` stdin is this script, so a
-# prompt would read EOF and the wizard would collapse on its first question —
-# and springing an interactive setup that asks for sudo on someone who has not
-# yet decided to trust us is worse than one more keystroke.
+# Setup is opt-in, never automatic: springing an interactive wizard that asks for
+# sudo on someone who has not yet decided to trust us is worse than one keystroke.
+#
+# It has to be handed a terminal explicitly. Under `curl | sh` stdin is this
+# script, so an inherited stdin reads EOF and the wizard either collapses on its
+# first question or silently takes the unattended path — which here would install
+# an agent into whichever kubeconfig context happens to be current.
+#
+# Opening it is the test, not `[ -r /dev/tty ]`: the device node exists with
+# world-readable bits in a container started without a tty, and only the open
+# fails there.
+if [ -n "$INIT" ]; then
+  if { : < /dev/tty; } 2>/dev/null; then
+    echo
+    # exec, so init's exit status is the installer's — which means cleaning up
+    # here, because an EXIT trap does not survive it.
+    rm -rf "$tmp"
+    trap - EXIT INT TERM
+    # Called by path: an install into a directory outside PATH is still a
+    # successful install, and `kaja` would not resolve.
+    exec "${INSTALL_DIR}/kaja" init < /dev/tty
+  fi
+
+  echo
+  echo "Note: --init needs a terminal, and this run has none." >&2
+fi
+
 echo
 echo "Next: kaja init"

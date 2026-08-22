@@ -305,6 +305,13 @@ spec:
                     format: int32
                     type: integer
                 type: object
+              registryPullSecretRef:
+                description: |-
+                  RegistryPullSecretRef names the org registry secret the image is pulled with. It is the
+                  durable intent; ImagePullSecrets holds the in-namespace secret the console materializes
+                  from it when the app is published, and cannot be mapped back to the credential it came
+                  from. Empty means the image is public, or that the pull secret was set by a build.
+                type: string
               replicas:
                 default: 1
                 description: Replicas specifies the number of desired replicas
